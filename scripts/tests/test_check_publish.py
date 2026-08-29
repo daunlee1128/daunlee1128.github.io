@@ -167,6 +167,27 @@ class CheckPublish(TempRepo):
         self.assertEqual(r.returncode, 1)
         self.assertIn(".allowlist", r.stderr)
 
+    def test_range_mode_accepts_multi_word_range(self):
+        # `--not --remotes` must reach git: with no remotes it scans all history,
+        # after a fetch that covers HEAD it scans nothing new (and that is OK).
+        r = self.check("--range", "HEAD", "--not", "--remotes")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertRegex(r.stdout, r"^OK: [1-9]\d* files scanned")
+        remote = Path(self.tmp.name) / "r.git"
+        git(Path(self.tmp.name), "init", "-q", "--bare", str(remote))
+        git(self.repo, "remote", "add", "origin", str(remote))
+        subprocess.run(["git", "push", "-q", "origin", "main"], cwd=self.repo, capture_output=True, text=True, check=True)
+        git(self.repo, "fetch", "-q", "origin")
+        r = self.check("--range", "HEAD", "--not", "--remotes")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("OK: 0 files scanned", r.stdout)
+
+    def test_range_mode_with_no_new_blobs_passes(self):
+        git(self.repo, "commit", "-q", "--allow-empty", "-m", "empty")
+        r = self.check("--range", "HEAD~1..HEAD")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("OK: 0 files scanned", r.stdout)
+
 
 class PrePushHook(TempRepo):
     def setUp(self):
@@ -212,6 +233,12 @@ class PrePushHook(TempRepo):
         r = self.push()
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("fail-closed", r.stderr)
+
+    def test_empty_commit_push_is_allowed(self):
+        self.assertEqual(self.push().returncode, 0)
+        git(self.repo, "commit", "-q", "--allow-empty", "-m", "empty")
+        r = self.push()
+        self.assertEqual(r.returncode, 0, r.stderr)
 
 
 if __name__ == "__main__":

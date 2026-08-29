@@ -3,9 +3,10 @@
 #   scripts/check-publish.sh                 작업 트리의 추적 파일 전체
 #   scripts/check-publish.sh drafts/x.md …   지정 파일(작업 트리)
 #   scripts/check-publish.sh --tree <sha>    그 커밋의 트리 전체
-#   scripts/check-publish.sh --range <범위>  그 범위에서 닿는 모든 blob (pre-push 가 호출)
-#     <범위> 는 git rev-list 가 받는 것이면 무엇이든. 예) "a..b", "b --not --remotes".
-#     공백이 들어갈 수 있으므로 rev-list 에 넘길 때 일부러 따옴표 없이 쓴다(단어 분리 의도).
+#   scripts/check-publish.sh --range <sha> --not --remotes  그 범위에서 닿는 모든 blob (pre-push 가 호출)
+#     <범위> 는 git rev-list 가 받는 것이면 무엇이든 — 여러 낱말이어도 --range 뒤 인자를 전부 모은다.
+#     예) "a..b", "b --not --remotes". 공백이 들어갈 수 있으므로 rev-list 에 넘길 때
+#     일부러 따옴표 없이 쓴다(단어 분리 의도).
 #     팁 트리만 보면 뒤 커밋에서 지운 파일이 이력으로 새어 나가므로 범위 전체의 blob 을 본다.
 # 환경변수 DENYLIST: 기본 <repo>/.denylist. 한 줄 = 패턴<TAB>치환어 — 여기서는 1열만 쓴다.
 # 환경변수 ALLOWLIST: 기본 <repo>/.allowlist. 한 줄 = 리터럴 부분 문자열(정규식 아님).
@@ -31,7 +32,11 @@ say() { printf '%s\n' "$*" >&2; }
 
 mode=work; tree=""; range=""
 if [ "${1:-}" = "--tree" ]; then mode=tree; tree="${2:?--tree needs a sha}"; shift 2
-elif [ "${1:-}" = "--range" ]; then mode=range; range="${2:?--range needs a rev-range}"; shift 2; fi
+elif [ "${1:-}" = "--range" ]; then
+  mode=range; shift; range="$*"
+  [ -n "$range" ] || { say "usage: --range <rev-range>"; exit 2; }
+  set --
+fi
 
 # 1. 자기 보호 — denylist 부재 = fail-closed
 if [ ! -f "$DENYLIST" ]; then say "FAIL: $DENYLIST 없음 (fail-closed). README 의 '.denylist' 절 참고"; exit 1; fi
@@ -137,10 +142,14 @@ for i in "${!files[@]}"; do
   done
 done
 
-# 2. 자기 보호 — 대상이 있어야 할 모드에서 0개 = fail-closed (git 이 조용히 빈 목록을 준 경우)
-if { [ "$mode" = tree ] || [ "$mode" = range ]; } && [ "$scanned" -eq 0 ]; then
+# 2. 자기 보호 — tree 모드에서 0개 = fail-closed (git 이 조용히 빈 목록을 준 경우).
+#    range 모드는 git 이 성공했다면 blob 0개도 정상(예: --allow-empty 커밋, 이미 push 된 범위) — 거부하지 않는다.
+if [ "$mode" = tree ] && [ "$scanned" -eq 0 ]; then
   say "FAIL: 검사한 파일이 0개 — 대상이 비었거나 읽지 못함"; exit 1
 fi
 
 if [ "$fail" -ne 0 ]; then say "FAIL: 위 항목을 고친 뒤 다시 시도 (denylist 를 완화하지 않는다)"; exit 1; fi
+if [ "$mode" = range ] && [ "$scanned" -eq 0 ]; then
+  echo "OK: 0 files scanned (범위에 새 blob 없음)"; exit 0
+fi
 echo "OK: $scanned files scanned"

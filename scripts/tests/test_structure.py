@@ -200,5 +200,42 @@ class ListPages(unittest.TestCase):
         self.assertTrue(p.stat().st_mode & 0o111, "chmod +x")
 
 
+class PostAndPage(unittest.TestCase):
+    def read(self, rel):
+        p = ROOT / rel
+        self.assertTrue(p.is_file(), f"{rel} 없음")
+        return p.read_text(encoding="utf-8")
+
+    def test_post_layout(self):
+        p = self.read("_layouts/post.html")
+        self.assertTrue(p.startswith("---\nlayout: default\n---"))
+        for s in ["sidebar-stacks.html active=page.stack", 'quicknav-toc.html html=content part="desktop"',
+                  'quicknav-toc.html html=content part="mobile"', 'class="crumb"', 'class="dl card desktop-only"',
+                  'class="meta-row mobile-only"', "page.explain", 'class="pn"', "prev", "next", 'class="ct art"']:
+            self.assertIn(s, p, s)
+
+    def test_page_layout_is_solo_column(self):
+        p = self.read("_layouts/page.html")
+        self.assertTrue(p.startswith("---\nlayout: default\n---"))
+        self.assertIn('class="ct art solo"', p)
+        self.assertNotIn("sidebar-stacks", p)
+
+    def test_about_matches_d1_scope(self):
+        a = self.read("about.md")
+        fm = yaml.safe_load(a.split("---")[1])
+        self.assertEqual((fm["layout"], fm["section"], fm["permalink"]), ("page", "about", "/about/"))
+        for kw in ["AI Gateway", "Agent Runtime", "LLMOps", "site.handle", "site.github_url", "/feed.xml"]:
+            self.assertIn(kw, a, kw)
+        self.assertNotRegex(a, r"[\w.+-]+@[\w-]+\.[\w.]+", "이메일 금지")
+        self.assertNotRegex(a, r"01[016789]-?\d{3,4}-?\d{4}", "전화번호 금지")
+        for banned in ["대학", "University", "년 ~", "재직", "경력 "]:
+            self.assertNotIn(banned, a, f"About에 {banned!r} 금지(D1)")
+
+    def test_callout_and_meta_row_css(self):
+        css = self.read("assets/site.css")
+        self.assertIn(".callout strong", css)
+        self.assertIn(".meta-row", css)
+
+
 if __name__ == "__main__":
     unittest.main()

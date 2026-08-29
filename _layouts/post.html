@@ -1,0 +1,45 @@
+---
+layout: default
+---
+{%- assign all = site.tech | concat: site.insights -%}
+{%- assign k = site.data.kinds | where: "slug", page.kind | first -%}
+{%- assign stack0 = page.stack | first -%}
+{%- assign same = all | where_exp: "p", "p.stack contains stack0" | sort: "date" -%}
+{%- assign idx = nil -%}
+{%- for p in same -%}{%- if p.url == page.url -%}{%- assign idx = forloop.index0 -%}{%- endif -%}{%- endfor -%}
+{%- assign prev = nil -%}{%- assign next = nil -%}
+{%- if idx -%}
+  {%- if idx > 0 -%}{%- assign i = idx | minus: 1 -%}{%- assign prev = same[i] -%}{%- endif -%}
+  {%- assign i = idx | plus: 1 -%}{%- if i < same.size -%}{%- assign next = same[i] -%}{%- endif -%}
+{%- endif -%}
+<div class="layout">
+{% include sidebar-stacks.html active=page.stack %}
+<main class="ct art">
+  <div class="crumb">
+    {%- if page.collection == "tech" -%}<span>기술</span>{%- if k -%}<span>/</span><b>{{ k.name }}</b>{%- endif -%}
+    {%- else -%}<span>인사이트</span>{%- if page.tags -%}<span>/</span><b>{{ page.tags | join: " · " }}</b>{%- endif -%}{%- endif -%}
+  </div>
+  <h1>{{ page.title }}</h1>
+  <dl class="dl card desktop-only">
+    <dt>date</dt><dd class="mono">{{ page.date | date: "%Y-%m-%d" }}</dd>
+    <dt>stack</dt><dd class="stk">{% for s in page.stack %}<a class="badge outline" href="{{ '/stack/' | append: s | append: '/' | relative_url }}">{{ s }}</a>{% endfor %}</dd>
+    {%- if page.explain -%}<dt>explain</dt><dd><a href="{{ page.explain | relative_url }}">{{ page.explain }} ↗</a> <span style="color:var(--gray-11)">— Background · Intuition · Code · Quiz</span></dd>{%- endif -%}
+  </dl>
+  <div class="meta-row mobile-only">
+    <time datetime="{{ page.date | date: '%Y-%m-%d' }}">{{ page.date | date: "%Y-%m-%d" }}</time>
+    {%- for s in page.stack -%}<a class="badge outline" href="{{ '/stack/' | append: s | append: '/' | relative_url }}">{{ s }}</a>{%- endfor -%}
+  </div>
+  {%- if page.explain -%}
+  <a class="card xcard mobile-only" href="{{ page.explain | relative_url }}"><span><b>인터랙티브 설명</b><small>Background · Intuition · Code · Quiz</small></span><span class="go">열기 ↗</span></a>
+  {%- endif -%}
+  {% include quicknav-toc.html html=content part="mobile" %}
+  {{ content }}
+  {%- if prev or next -%}
+  <div class="pn">
+    {%- if prev -%}<a class="prev" href="{{ prev.url | relative_url }}"><small>← 이전 · {{ stack0 }}</small>{{ prev.title }}</a>{%- endif -%}
+    {%- if next -%}<a class="next" href="{{ next.url | relative_url }}"><small>다음 · {{ stack0 }} →</small>{{ next.title }}</a>{%- endif -%}
+  </div>
+  {%- endif -%}
+</main>
+{% include quicknav-toc.html html=content part="desktop" %}
+</div>

@@ -68,5 +68,40 @@ class StackStubs(unittest.TestCase):
             self.assertEqual(fm["permalink"], f"/stack/{p.stem}/")
 
 
+class Assets(unittest.TestCase):
+    def read(self, rel):
+        p = ROOT / rel
+        self.assertTrue(p.is_file(), f"{rel} 없음")
+        return p.read_text(encoding="utf-8")
+
+    def test_tokens_css_has_light_and_dark_scales(self):
+        css = self.read("assets/tokens.css")
+        self.assertIn(":root{", css.replace(" ", ""))
+        self.assertIn("html.dark{", css.replace(" ", ""))
+        for tok in ["--gray-1:#fcfcfd", "--gray-12:#1c2024", "--accent-9:#f76b15", "--accent-11:#cc4e00",
+                    "--blue-3:#e6f4fe", "--grass-11:#2a7e3b", "--violet-3:#f4f0fe", "--amber-11:#ab6400",
+                    "--fs-8:35px", "--lh-8:40px", "--sp-9:64px", "--r-4:8px"]:
+            self.assertIn(tok, css.replace(" ", ""), tok)
+        self.assertIn("--gray-1:#111113", css.replace(" ", ""), "다크 gray-1")
+        self.assertIn("--accent-11:#ffa057", css.replace(" ", ""), "다크 accent-11")
+        self.assertNotIn("url(", css, "외부 요청 0 — 폰트/이미지 url 금지")
+
+    def test_site_css_has_components_responsive_and_print(self):
+        css = self.read("assets/site.css")
+        for sel in [".hd", ".sb", ".qn", ".ct", ".row", ".badge.soft", ".badge.outline", ".callout", ".pn",
+                    ".rg", ".toc", ".chips", ".seg", ".mhd", ".mtabs", ".layout", ".desktop-only", ".mobile-only"]:
+            self.assertIn(sel, css, sel)
+        self.assertIn("@media(max-width:768px)", css.replace(" ", ""))
+        self.assertIn("@media print", css)
+        self.assertNotIn("url(", css)
+
+    def test_js_files_are_small_and_self_contained(self):
+        for rel, must in [("assets/theme.js", "localStorage"), ("assets/filter.js", "data-kind")]:
+            js = self.read(rel)
+            self.assertIn(must, js)
+            self.assertNotIn("http", js)
+            self.assertLess(len(js), 2500, f"{rel} 는 최소 JS — 2.5KB 이하")
+
+
 if __name__ == "__main__":
     unittest.main()

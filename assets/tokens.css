@@ -1,0 +1,28 @@
+/* Radix Themes 앵커 토큰 (gray=slate · accent=orange). 원천: docs/superpowers/design/tech-blog/gen.py TOK (2026-08-30)
+   12단계 의미: 1–2 페이지/패널 배경 · 3–5 컴포넌트 배경/hover · 6–8 경계선 · 9–10 솔리드 · 11–12 텍스트 */
+:root{
+  --gray-1:#fcfcfd;--gray-2:#f9f9fb;--gray-3:#f0f0f3;--gray-4:#e8e8ec;--gray-5:#e0e1e6;--gray-6:#d9d9e0;--gray-7:#cdced6;--gray-8:#b9bbc6;--gray-9:#8b8d98;--gray-10:#80838d;--gray-11:#60646c;--gray-12:#1c2024;
+  --accent-2:#fff7ed;--accent-3:#ffefd6;--accent-4:#ffdfb5;--accent-6:#ffc182;--accent-8:#ec9455;--accent-9:#f76b15;--accent-10:#ef5f00;--accent-11:#cc4e00;--accent-12:#582d1d;
+  /* kind scales: step 3 (bg) · 9 (solid) · 11 (text) */
+  --blue-3:#e6f4fe;--blue-9:#0090ff;--blue-11:#0d74ce;
+  --grass-3:#e9f6e9;--grass-9:#46a758;--grass-11:#2a7e3b;
+  --violet-3:#f4f0fe;--violet-9:#6e56cf;--violet-11:#6550b9;
+  --amber-3:#fff7c2;--amber-9:#ffc53d;--amber-11:#ab6400;
+  --color-background:#fff;--color-panel:#fff;
+  --shadow-2:0 0 0 1px rgba(0,0,32,.06),0 1px 1px 0 rgba(0,0,32,.04),0 2px 1px -1px rgba(0,0,0,.02),0 1px 3px 0 rgba(0,0,0,.03);
+  /* type scale 1~8 */
+  --fs-1:12px;--lh-1:16px;--fs-2:14px;--lh-2:20px;--fs-3:16px;--lh-3:24px;--fs-4:18px;--lh-4:26px;--fs-5:20px;--lh-5:28px;--fs-6:24px;--lh-6:30px;--fs-7:28px;--lh-7:36px;--fs-8:35px;--lh-8:40px;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;--sp-7:40px;--sp-8:48px;--sp-9:64px;
+  --r-2:4px;--r-3:6px;--r-4:8px;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Pretendard","Apple SD Gothic Neo",Roboto,"Helvetica Neue","Malgun Gothic",system-ui,sans-serif;
+  --mono:Menlo,Consolas,"Bitstream Vera Sans Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+html.dark{
+  --gray-1:#111113;--gray-2:#18191b;--gray-3:#212225;--gray-4:#272a2d;--gray-5:#2e3135;--gray-6:#363a3f;--gray-7:#43484e;--gray-8:#5a6169;--gray-9:#696e77;--gray-10:#777b84;--gray-11:#b0b4ba;--gray-12:#edeef0;
+  --accent-2:#1e160f;--accent-3:#331e0b;--accent-4:#462100;--accent-6:#66350c;--accent-8:#a35829;--accent-9:#f76b15;--accent-10:#ff801f;--accent-11:#ffa057;--accent-12:#ffe0c2;
+  --blue-3:#0d2847;--blue-11:#70b8ff;--grass-3:#1b2a1e;--grass-11:#71d083;--violet-3:#291f43;--violet-11:#baa7ff;--amber-3:#302008;--amber-11:#ffca16;
+  --color-background:#111113;--color-panel:#18191b;
+  --shadow-2:0 0 0 1px rgba(255,255,255,.08),0 1px 1px 0 rgba(0,0,0,.4);
+  color-scheme:dark;
+}

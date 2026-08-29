@@ -9,7 +9,7 @@ git config core.hooksPath .githooks            # pre-push 검사 활성화 (한 
 cp /path/to/your/.denylist .denylist            # 로컬 전용 — gitignore 되어 있음. 없으면 push 가 거부된다(fail-closed)
 ```
 
-`.denylist` 형식: 한 줄에 `패턴<TAB>치환어`. 치환어는 생략 가능, `#` 주석. 훅은 1열(`grep -Ei`)만 본다. 1열이 잘못된 정규식이면 검사가 실패로 끝난다(fail-closed) — 괄호·`+`·`|` 같은 메타문자는 `\`로 이스케이프한다.
+`.denylist` 형식: 한 줄에 `패턴<TAB>치환어`. 치환어는 생략 가능, `#` 주석. 훅은 1열(`grep -Ein`)만 본다. 1열이 잘못된 정규식이면 검사가 실패로 끝난다(fail-closed) — 괄호·`+`·`|` 같은 메타문자는 `\`로 이스케이프한다.
 
 ## 글 올리기
 

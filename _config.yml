@@ -26,6 +26,9 @@ defaults:
     values: { layout: post, type: tech, section: tech }
   - scope: { path: "", type: insights }
     values: { layout: post, type: insights, section: insights }
+  # stack/ 은 어느 탭에도 속하지 않는다 — 헤더의 '글' 탭이 활성되지 않도록 section 을 준다
+  - scope: { path: "stack" }
+    values: { section: stack }
 
 markdown: kramdown
 kramdown:

@@ -2,6 +2,7 @@
 {%- assign active = include.active -%}
 <aside class="sb desktop-only">
   <p class="cap">스택 맵 — 요청 흐름 순 · 글이 있는 스택만</p>
+  {%- assign rendered = 0 -%}{%- assign base_done = 0 -%}
   {%- for g in site.data.stacks -%}
   {%- assign gn = 0 -%}{%- capture rows -%}
     {%- for it in g.items -%}
@@ -11,8 +12,15 @@
       {%- endif -%}
     {%- endfor -%}
   {%- endcapture -%}
-  {%- if gn > 0 -%}<div class="g"><div class="gt">{{ g.group }}<i>{{ gn }}</i></div>{{ rows }}</div>{%- endif -%}
-  {%- if forloop.index == 1 or forloop.index == 2 -%}<div class="flow">↓</div>{%- elsif forloop.index == 3 -%}<div class="flow base">— 기반 —</div>{%- endif -%}
+  {%- if gn > 0 -%}
+    {%- if rendered > 0 -%}
+      {%- if forloop.index <= 3 -%}<div class="flow">↓</div>
+      {%- elsif base_done == 0 -%}<div class="flow base">— 기반 —</div>{%- assign base_done = 1 -%}
+      {%- endif -%}
+    {%- endif -%}
+    <div class="g"><div class="gt">{{ g.group }}<i>{{ gn }}</i></div>{{ rows }}</div>
+    {%- assign rendered = rendered | plus: 1 -%}
+  {%- endif -%}
   {%- endfor -%}
 </aside>
 {%- capture keys -%}{%- for g in site.data.stacks -%}{%- for it in g.items -%}{%- assign n = all | where_exp: "p", "p.stack contains it.slug" | size -%}{%- if n > 0 -%}{{ n | plus: 1000 }}|{{ it.slug }}|{{ it.name }},{%- endif -%}{%- endfor -%}{%- endfor -%}{%- endcapture -%}

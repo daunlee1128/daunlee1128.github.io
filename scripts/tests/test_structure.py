@@ -31,6 +31,9 @@ class ConfigAndData(unittest.TestCase):
         scopes = {(d["scope"].get("type"), d["values"].get("type"), d["values"].get("layout")) for d in cfg["defaults"]}
         self.assertIn(("tech", "tech", "post"), scopes)
         self.assertIn(("insights", "insights", "post"), scopes)
+        self.assertIn({"path": "stack"}, [d["scope"] for d in cfg["defaults"]], "stack/ 페이지는 section: stack — 어떤 탭도 활성 아님")
+        stack_default = [d for d in cfg["defaults"] if d["scope"] == {"path": "stack"}][0]
+        self.assertEqual(stack_default["values"]["section"], "stack")
         self.assertEqual(sorted(cfg["plugins"]), ["jekyll-seo-tag", "jekyll-sitemap"])
         for key in ["handle", "tagline", "description", "github_url", "url"]:
             self.assertIn(key, cfg, f"_config.yml에 {key} 없음")
@@ -140,6 +143,17 @@ class IncludesAndDefaultLayout(unittest.TestCase):
                 html = self.read(f"_includes/{name}")
                 self.assertIsNone(EXTERNAL_RESOURCE.search(html), "외부 리소스 로드 금지")
 
+    def test_kind_badge_falls_back_on_unknown_kind(self):
+        b = self.read("_includes/kind-badge.html")
+        self.assertIn("var(--gray-4)", b, "알 수 없는 종류에도 배경 토큰 fallback")
+        self.assertIn("var(--gray-11)", b)
+        self.assertIn("default:", b, "k.name 이 없으면 p.kind 를 그대로 보여준다")
+
+    def test_collection_dirs_are_tracked_with_gitkeep(self):
+        for rel in ["_tech/.gitkeep", "_insights/.gitkeep"]:
+            with self.subTest(path=rel):
+                self.assertTrue((ROOT / rel).is_file(), f"{rel} 없음 — 빈 컬렉션 디렉터리가 클론에 없다")
+
     def test_head_orders_theme_script_before_css_and_links_feed(self):
         head = self.read("_includes/head.html")
         self.assertLess(head.index("localStorage.getItem('theme')"), head.index("tokens.css"), "플래시 방지 스크립트는 CSS 앞")
@@ -169,6 +183,7 @@ class IncludesAndDefaultLayout(unittest.TestCase):
         self.assertIn('class="sb desktop-only"', s)
         self.assertIn('class="strip mobile-only"', s)
         self.assertIn("active contains", s)
+        self.assertIn("rendered", s, "연결선은 실제로 렌더된 그룹 사이에만 — rendered 카운터")
 
     def test_filter_and_toc_have_parts(self):
         f = self.read("_includes/quicknav-filter.html")
@@ -178,6 +193,7 @@ class IncludesAndDefaultLayout(unittest.TestCase):
         t = self.read("_includes/quicknav-toc.html")
         self.assertIn("'<h2 '", t)
         self.assertIn("strip_html", t)
+        self.assertIn("entries.size > 0", t, "<h2 id> 이 없으면 목차 자체를 렌더하지 않는다")
 
     def test_default_layout(self):
         d = self.read("_layouts/default.html")
@@ -234,6 +250,7 @@ class PostAndPage(unittest.TestCase):
                   'quicknav-toc.html html=content part="mobile"', 'class="crumb"', 'class="dl card desktop-only"',
                   'class="meta-row mobile-only"', "page.explain", 'class="pn"', "prev", "next", 'class="ct art"']:
             self.assertIn(s, p, s)
+        self.assertEqual(p.count("<time datetime="), 2, "데스크톱 메타 카드와 모바일 메타 줄 모두 <time>")
 
     def test_page_layout_is_solo_column(self):
         p = self.read("_layouts/page.html")

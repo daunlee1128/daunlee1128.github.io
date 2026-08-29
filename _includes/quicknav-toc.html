@@ -10,6 +10,7 @@
 {%- endfor -%}
 {%- endcapture -%}
 {%- assign entries = items | strip | split: "¶" -%}
+{%- if entries.size > 0 and entries[0] != "" -%}
 {%- if include.part == "desktop" -%}
 <aside class="qn desktop-only">
   <p class="cap">이 글에서</p>
@@ -26,4 +27,5 @@
     {%- for e in entries -%}{%- assign f = e | strip | split: "|" -%}{%- if f[0] != "" -%}<a href="#{{ f[0] }}">{{ f[1] }}</a>{%- endif -%}{%- endfor -%}
   </div>
 </details>
+{%- endif -%}
 {%- endif -%}

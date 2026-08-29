@@ -1,14 +1,14 @@
 """실제 Jekyll 빌드 검사. bundle(Task 0)이 없으면 전부 skip."""
-import re
 import shutil
 import subprocess
 import unittest
 from pathlib import Path
 
+from external_re import EXTERNAL_SUBRESOURCE
+
 ROOT = Path(__file__).resolve().parents[2]
 SITE = ROOT / "_site"
 HAVE_BUNDLE = shutil.which("bundle") is not None
-EXTERNAL_RESOURCE = re.compile(r'<(link|script|img|iframe)[^>]*(src|href)="https?://', re.I)
 
 
 @unittest.skipUnless(HAVE_BUNDLE, "bundle 없음 — Task 0 참고")
@@ -33,7 +33,8 @@ class JekyllBuild(unittest.TestCase):
     def test_no_external_resources_and_no_drafts_leak(self):
         for p in SITE.rglob("*.html"):
             with self.subTest(page=p.relative_to(SITE)):
-                self.assertIsNone(EXTERNAL_RESOURCE.search(p.read_text(encoding="utf-8")))
+                self.assertIsNone(EXTERNAL_SUBRESOURCE.search(p.read_text(encoding="utf-8")),
+                                  "외부 서브리소스(script/img/link rel=stylesheet 등) 로드 금지 — canonical/alternate 는 허용")
         self.assertFalse((SITE / "drafts").exists())
         self.assertFalse((SITE / "scripts").exists())
         self.assertFalse((SITE / "README.md").exists())

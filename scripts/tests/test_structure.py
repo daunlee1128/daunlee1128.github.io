@@ -4,6 +4,8 @@ from pathlib import Path
 
 import yaml
 
+from external_re import EXTERNAL_SUBRESOURCE
+
 ROOT = Path(__file__).resolve().parents[2]
 
 EXTERNAL_RESOURCE = re.compile(r'<(link|script|img|iframe)[^>]*(src|href)="https?://', re.I)
@@ -101,6 +103,25 @@ class Assets(unittest.TestCase):
             self.assertIn(must, js)
             self.assertNotIn("http", js)
             self.assertLess(len(js), 2500, f"{rel} 는 최소 JS — 2.5KB 이하")
+
+
+class BuildTestRegex(unittest.TestCase):
+    """빌드 검사가 쓰는 '외부 서브리소스' 정규식 — seo-tag 의 canonical/alternate 는 요청이 아니다."""
+
+    def test_matches_real_subresources(self):
+        for html in ['<script src="https://cdn.x/a.js">',
+                     '<link rel="stylesheet" href="https://f.x/a.css">',
+                     '<img src="https://i.x/a.png">',
+                     '<link href="https://f.x/a.css" rel="preload">']:
+            with self.subTest(html=html):
+                self.assertIsNotNone(EXTERNAL_SUBRESOURCE.search(html))
+
+    def test_ignores_metadata_links(self):
+        for html in ['<link rel="canonical" href="https://hong.gildong.github.io/" />',
+                     '<link rel="alternate" type="application/atom+xml" href="https://x/feed.xml">',
+                     '<a href="https://github.com/Kong/kong">Kong</a>']:
+            with self.subTest(html=html):
+                self.assertIsNone(EXTERNAL_SUBRESOURCE.search(html))
 
 
 INCLUDES = ["head.html", "header.html", "footer.html", "kind-badge.html", "post-row.html",

@@ -184,6 +184,7 @@ class IncludesAndDefaultLayout(unittest.TestCase):
         self.assertIn('class="strip mobile-only"', s)
         self.assertIn("active contains", s)
         self.assertIn("rendered", s, "연결선은 실제로 렌더된 그룹 사이에만 — rendered 카운터")
+        self.assertIn("base_done", s, "기반 그룹만 있을 때는 연결선 자체를 생략 — base_done 플래그")
 
     def test_filter_and_toc_have_parts(self):
         f = self.read("_includes/quicknav-filter.html")

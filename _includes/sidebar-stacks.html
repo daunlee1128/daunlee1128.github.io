@@ -17,6 +17,8 @@
       {%- if forloop.index <= 3 -%}<div class="flow">↓</div>
       {%- elsif base_done == 0 -%}<div class="flow base">— 기반 —</div>{%- assign base_done = 1 -%}
       {%- endif -%}
+    {%- elsif forloop.index > 3 -%}
+      {%- assign base_done = 1 -%}
     {%- endif -%}
     <div class="g"><div class="gt">{{ g.group }}<i>{{ gn }}</i></div>{{ rows }}</div>
     {%- assign rendered = rendered | plus: 1 -%}

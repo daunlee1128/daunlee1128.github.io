@@ -103,5 +103,68 @@ class Assets(unittest.TestCase):
             self.assertLess(len(js), 2500, f"{rel} 는 최소 JS — 2.5KB 이하")
 
 
+INCLUDES = ["head.html", "header.html", "footer.html", "kind-badge.html", "post-row.html",
+            "sidebar-stacks.html", "quicknav-filter.html", "quicknav-toc.html"]
+
+
+class IncludesAndDefaultLayout(unittest.TestCase):
+    def read(self, rel):
+        p = ROOT / rel
+        self.assertTrue(p.is_file(), f"{rel} 없음")
+        return p.read_text(encoding="utf-8")
+
+    def test_all_includes_exist_and_load_no_external_resources(self):
+        for name in INCLUDES:
+            with self.subTest(include=name):
+                html = self.read(f"_includes/{name}")
+                self.assertIsNone(EXTERNAL_RESOURCE.search(html), "외부 리소스 로드 금지")
+
+    def test_head_orders_theme_script_before_css_and_links_feed(self):
+        head = self.read("_includes/head.html")
+        self.assertLess(head.index("localStorage.getItem('theme')"), head.index("tokens.css"), "플래시 방지 스크립트는 CSS 앞")
+        self.assertIn("{% seo %}", head)
+        self.assertIn("application/atom+xml", head)
+        for a in ["tokens.css", "site.css", "theme.js", "filter.js"]:
+            self.assertIn(a, head)
+        self.assertEqual(head.count("<script"), 3, "인라인 1 + defer 2")
+
+    def test_header_has_tabs_github_rss_toggle_and_no_real_name(self):
+        h = self.read("_includes/header.html")
+        for s in ["site.handle", "site.tagline", "site.github_url", "/feed.xml", "data-theme-toggle", "icon-sun", "icon-moon",
+                  'page.section == "tech"', 'page.section == "insights"', 'page.section == "about"']:
+            self.assertIn(s, h, s)
+        self.assertIn('class="mhd mobile-only"', h)
+        self.assertIn('class="mtabs mobile-only"', h)
+
+    def test_post_row_contract(self):
+        r = self.read("_includes/post-row.html")
+        for s in ['data-kind="', "include.show_type", "kind-badge.html", "p.summary", "p.stack", "p.explain", "인터랙티브 설명"]:
+            self.assertIn(s, r, s)
+
+    def test_sidebar_renders_only_stacks_with_posts_and_mobile_chips(self):
+        s = self.read("_includes/sidebar-stacks.html")
+        self.assertIn("site.tech | concat: site.insights", s)
+        self.assertIn("where_exp", s)
+        self.assertIn('class="sb desktop-only"', s)
+        self.assertIn('class="strip mobile-only"', s)
+        self.assertIn("active contains", s)
+
+    def test_filter_and_toc_have_parts(self):
+        f = self.read("_includes/quicknav-filter.html")
+        self.assertIn('include.part == "desktop"', f)
+        self.assertIn('include.part == "mobile"', f)
+        self.assertIn('name="kind"', f)
+        t = self.read("_includes/quicknav-toc.html")
+        self.assertIn("'<h2 '", t)
+        self.assertIn("strip_html", t)
+
+    def test_default_layout(self):
+        d = self.read("_layouts/default.html")
+        self.assertIn('<html lang="{{ site.lang }}">', d)
+        for inc in ["head.html", "header.html", "footer.html"]:
+            self.assertIn(f"{{% include {inc} %}}", d)
+        self.assertIn("{{ content }}", d)
+
+
 if __name__ == "__main__":
     unittest.main()

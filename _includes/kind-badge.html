@@ -1,0 +1,7 @@
+{%- assign p = include.post -%}
+{%- if p.collection == "insights" -%}
+<span class="badge soft" style="--kb:var(--amber-3);--kt:var(--amber-11)">인사이트</span>
+{%- else -%}
+{%- assign k = site.data.kinds | where: "slug", p.kind | first -%}
+<span class="badge soft" style="--kb:var({{ k.bg }});--kt:var({{ k.fg }})">{{ k.name }}</span>
+{%- endif -%}

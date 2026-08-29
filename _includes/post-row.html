@@ -1,0 +1,8 @@
+{%- assign p = include.post -%}
+{%- assign dk = p.kind -%}{%- if p.collection == "insights" -%}{%- assign dk = "insights" -%}{%- endif -%}
+<a class="row" href="{{ p.url | relative_url }}" data-kind="{{ dk }}">
+  <span class="top">{% if include.show_type and p.collection == "tech" %}<span class="tp">tech</span>{% endif %}{% include kind-badge.html post=p %}<time datetime="{{ p.date | date: '%Y-%m-%d' }}">{{ p.date | date: '%Y-%m-%d' }}</time></span>
+  <b>{{ p.title }}</b>
+  <p>{{ p.summary }}</p>
+  <span class="stk">{% for s in p.stack %}<span class="badge outline">{{ s }}</span>{% endfor %}{% if p.explain %}<span class="x">인터랙티브 설명 ↗</span>{% endif %}</span>
+</a>

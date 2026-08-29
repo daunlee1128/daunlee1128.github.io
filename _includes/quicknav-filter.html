@@ -1,0 +1,26 @@
+{%- assign posts = include.posts -%}
+{%- assign tech = posts | where: "collection", "tech" -%}
+{%- assign ins = posts | where: "collection", "insights" -%}
+{%- if include.part == "desktop" -%}
+<aside class="qn desktop-only" data-filter>
+  <p class="cap">종류</p>
+  <div class="rg">
+    <label><input type="radio" name="kind" value="all" checked><span class="r"></span>전체<i>{{ posts | size }}</i></label>
+    {%- for k in site.data.kinds -%}{%- assign n = tech | where: "kind", k.slug | size -%}{%- if n > 0 -%}
+    <label><input type="radio" name="kind" value="{{ k.slug }}"><span class="r"></span>{{ k.name }}<i>{{ n }}</i></label>
+    {%- endif -%}{%- endfor -%}
+    {%- if ins.size > 0 -%}<div class="sep"></div><label><input type="radio" name="kind" value="insights"><span class="r"></span>인사이트만<i>{{ ins.size }}</i></label>{%- endif -%}
+  </div>
+  <p class="cap sub">구독</p>
+  <a class="ibtn wide" href="{{ '/feed.xml' | relative_url }}">RSS 피드</a>
+</aside>
+{%- endif -%}
+{%- if include.part == "mobile" -%}
+<div class="seg mobile-only" data-filter>
+  <label><input type="radio" name="kind" value="all" checked>전체 {{ posts | size }}</label>
+  {%- for k in site.data.kinds -%}{%- assign n = tech | where: "kind", k.slug | size -%}{%- if n > 0 -%}
+  <label><input type="radio" name="kind" value="{{ k.slug }}">{{ k.name }}</label>
+  {%- endif -%}{%- endfor -%}
+  {%- if ins.size > 0 -%}<label><input type="radio" name="kind" value="insights">인사이트</label>{%- endif -%}
+</div>
+{%- endif -%}

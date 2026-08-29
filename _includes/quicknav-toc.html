@@ -1,0 +1,29 @@
+{%- assign chunks = include.html | split: '<h2 ' -%}
+{%- capture items -%}
+{%- for c in chunks offset: 1 -%}
+  {%- assign attrs = c | split: ">" | first -%}
+  {%- if attrs contains 'id="' -%}
+  {%- assign id = attrs | split: 'id="' | last | split: '"' | first -%}
+  {%- assign text = c | remove_first: attrs | remove_first: ">" | split: "</h2>" | first | strip_html | strip -%}
+  {{ id }}|{{ text }}¶
+  {%- endif -%}
+{%- endfor -%}
+{%- endcapture -%}
+{%- assign entries = items | strip | split: "¶" -%}
+{%- if include.part == "desktop" -%}
+<aside class="qn desktop-only">
+  <p class="cap">이 글에서</p>
+  <div class="toc">
+    {%- for e in entries -%}{%- assign f = e | strip | split: "|" -%}{%- if f[0] != "" -%}<a href="#{{ f[0] }}">{{ f[1] }}</a>{%- endif -%}{%- endfor -%}
+  </div>
+</aside>
+{%- endif -%}
+{%- if include.part == "mobile" -%}
+{%- capture joined -%}{%- for e in entries -%}{%- assign f = e | strip | split: "|" -%}{%- if f[0] != "" -%}{{ f[1] }}{% unless forloop.last %} · {% endunless %}{%- endif -%}{%- endfor -%}{%- endcapture -%}
+<details class="card toc-card mobile-only">
+  <summary><b>이 글에서</b><span>{{ joined }} ▾</span></summary>
+  <div class="toc">
+    {%- for e in entries -%}{%- assign f = e | strip | split: "|" -%}{%- if f[0] != "" -%}<a href="#{{ f[0] }}">{{ f[1] }}</a>{%- endif -%}{%- endfor -%}
+  </div>
+</details>
+{%- endif -%}

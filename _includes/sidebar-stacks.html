@@ -1,0 +1,33 @@
+{%- assign all = site.tech | concat: site.insights -%}
+{%- assign active = include.active -%}
+<aside class="sb desktop-only">
+  <p class="cap">스택 맵 — 요청 흐름 순 · 글이 있는 스택만</p>
+  {%- for g in site.data.stacks -%}
+  {%- assign gn = 0 -%}{%- capture rows -%}
+    {%- for it in g.items -%}
+      {%- assign n = all | where_exp: "p", "p.stack contains it.slug" | size -%}
+      {%- if n > 0 -%}{%- assign gn = gn | plus: n -%}
+      <a class="{% if active contains it.slug %}on{% endif %}" href="{{ '/stack/' | append: it.slug | append: '/' | relative_url }}">{{ it.name }}<i>{{ n }}</i></a>
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endcapture -%}
+  {%- if gn > 0 -%}<div class="g"><div class="gt">{{ g.group }}<i>{{ gn }}</i></div>{{ rows }}</div>{%- endif -%}
+  {%- if forloop.index == 1 or forloop.index == 2 -%}<div class="flow">↓</div>{%- elsif forloop.index == 3 -%}<div class="flow base">— 기반 —</div>{%- endif -%}
+  {%- endfor -%}
+</aside>
+{%- capture keys -%}{%- for g in site.data.stacks -%}{%- for it in g.items -%}{%- assign n = all | where_exp: "p", "p.stack contains it.slug" | size -%}{%- if n > 0 -%}{{ n | plus: 1000 }}|{{ it.slug }}|{{ it.name }},{%- endif -%}{%- endfor -%}{%- endfor -%}{%- endcapture -%}
+{%- assign chips = keys | split: "," | sort | reverse -%}
+<div class="strip mobile-only">
+  <details>
+    <summary class="cap">스택 맵 · 글 수 많은 순<span>그룹별로 보기 ▾</span></summary>
+    <div class="groups">
+      {%- for g in site.data.stacks -%}{%- capture rows -%}{%- for it in g.items -%}{%- assign n = all | where_exp: "p", "p.stack contains it.slug" | size -%}{%- if n > 0 -%}<a class="{% if active contains it.slug %}on{% endif %}" href="{{ '/stack/' | append: it.slug | append: '/' | relative_url }}">{{ it.name }}<i>{{ n }}</i></a>{%- endif -%}{%- endfor -%}{%- endcapture -%}
+      {%- if rows != "" -%}<div class="gt">{{ g.group }}</div><div class="chips" style="padding-left:0">{{ rows }}</div>{%- endif -%}{%- endfor -%}
+    </div>
+  </details>
+  <div class="chips">
+    {%- for c in chips -%}{%- assign f = c | split: "|" -%}
+    <a class="{% if active contains f[1] %}on{% endif %}" href="{{ '/stack/' | append: f[1] | append: '/' | relative_url }}">{{ f[2] }}<i>{{ f[0] | minus: 1000 }}</i></a>
+    {%- endfor -%}
+  </div>
+</div>

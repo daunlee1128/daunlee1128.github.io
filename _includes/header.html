@@ -1,0 +1,25 @@
+{%- capture svg_gh -%}<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 .5a7.5 7.5 0 0 0-2.37 14.6c.37.07.5-.16.5-.36v-1.3c-2.08.45-2.52-.9-2.52-.9-.34-.87-.83-1.1-.83-1.1-.68-.46.05-.45.05-.45.75.05 1.15.77 1.15.77.67 1.15 1.76.82 2.19.63.07-.49.26-.82.48-1.01-1.67-.19-3.42-.83-3.42-3.7 0-.82.29-1.49.77-2.01-.08-.19-.33-.95.07-1.98 0 0 .63-.2 2.06.77a7.2 7.2 0 0 1 3.75 0c1.43-.97 2.06-.77 2.06-.77.4 1.03.15 1.79.07 1.98.48.52.77 1.19.77 2.01 0 2.88-1.75 3.51-3.42 3.7.27.23.51.69.51 1.39v2.06c0 .2.13.44.5.36A7.5 7.5 0 0 0 8 .5z"/></svg>{%- endcapture -%}
+{%- capture svg_toggle -%}<button class="ibtn icon" type="button" data-theme-toggle aria-label="테마 전환"><svg class="icon-sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/></svg><svg class="icon-moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 9.5A6 6 0 0 1 6.5 2.5a6 6 0 1 0 7 7z"/></svg></button>{%- endcapture -%}
+<header class="hd desktop-only">
+  <a class="brand" href="{{ '/' | relative_url }}">{{ site.handle }}<small>{{ site.tagline }}</small></a>
+  <nav class="tabs">
+    <a class="{% if page.section == "tech" %}on{% endif %}" href="{{ '/tech/' | relative_url }}">기술</a>
+    <a class="{% if page.section == "insights" %}on{% endif %}" href="{{ '/insights/' | relative_url }}">인사이트</a>
+    <a class="{% if page.section == "about" %}on{% endif %}" href="{{ '/about/' | relative_url }}">About</a>
+  </nav>
+  <div class="util">
+    <a class="ibtn" href="{{ site.github_url }}" rel="me">{{ svg_gh }}GitHub</a>
+    <a class="ibtn" href="{{ '/feed.xml' | relative_url }}">RSS</a>
+    {{ svg_toggle }}
+  </div>
+</header>
+<div class="mhd mobile-only">
+  <a class="brand" href="{{ '/' | relative_url }}">{{ site.handle }}</a>
+  <span style="margin-left:auto;display:flex;gap:var(--sp-2)"><a class="ibtn icon" href="{{ site.github_url }}" aria-label="GitHub">{{ svg_gh }}</a>{{ svg_toggle }}</span>
+</div>
+<nav class="mtabs mobile-only">
+  <a class="{% if page.section == "" or page.section == nil %}on{% endif %}" href="{{ '/' | relative_url }}">글</a>
+  <a class="{% if page.section == "tech" %}on{% endif %}" href="{{ '/tech/' | relative_url }}">기술</a>
+  <a class="{% if page.section == "insights" %}on{% endif %}" href="{{ '/insights/' | relative_url }}">인사이트</a>
+  <a class="{% if page.section == "about" %}on{% endif %}" href="{{ '/about/' | relative_url }}">About</a>
+</nav>

@@ -1,0 +1,44 @@
+# 사이트 메타 — handle·github_url은 계정 생성 뒤(D11·D12) 바꾼다
+title: hong.gildong
+handle: hong.gildong
+tagline: backend · ai platform
+description: AI Gateway · Agent Runtime · LLMOps 를 만들고 운영하며 남기는 기록
+url: "https://hong.gildong.github.io"
+baseurl: ""
+github_url: "https://github.com/hong.gildong"
+lang: ko
+timezone: Asia/Seoul
+
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+collections:
+  tech:
+    output: true
+    permalink: /tech/:name/
+  insights:
+    output: true
+    permalink: /insights/:name/
+
+defaults:
+  - scope: { path: "", type: tech }
+    values: { layout: post, type: tech, section: tech }
+  - scope: { path: "", type: insights }
+    values: { layout: post, type: insights, section: insights }
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  auto_ids: true
+
+exclude:
+  - drafts
+  - scripts
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - .githooks
+  - .denylist
+  - vendor

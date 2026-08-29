@@ -1,0 +1,6 @@
+# tech 하위 구분. label = 글 h2 앞 영문 캡션 기본값. bg/fg = CSS 변수 (step 3 배경 · 11 텍스트)
+- { slug: design,          name: 설계,      label: DESIGN,          bg: --blue-3,   fg: --blue-11 }
+- { slug: config,          name: 설정,      label: CONFIG,          bg: --gray-4,   fg: --gray-11 }
+- { slug: impl,            name: 구현,      label: IMPL,            bg: --grass-3,  fg: --grass-11 }
+- { slug: ops,             name: 운영,      label: OPS,             bg: --violet-3, fg: --violet-11 }
+- { slug: troubleshooting, name: 문제 해결, label: TROUBLESHOOTING, bg: --accent-3, fg: --accent-11 }

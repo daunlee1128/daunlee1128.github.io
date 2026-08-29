@@ -1,0 +1,31 @@
+# 스택의 유일한 원장. 새 스택은 여기에만 추가 → scripts/gen-stack-stubs.py 실행.
+# 순서 = 사이드바 순서(요청 흐름: Gateway → AI·LLM → Observability, 아래 기반 2그룹).
+- group: Gateway · Identity
+  items:
+    - { slug: kong,      name: Kong }
+    - { slug: keycloak,  name: Keycloak }
+    - { slug: deck,      name: decK }
+    - { slug: aws-iam,   name: AWS IAM · IRSA · SigV4 }
+- group: AI · LLM
+  items:
+    - { slug: bedrock,     name: Amazon Bedrock }
+    - { slug: agentcore,   name: AgentCore Runtime }
+    - { slug: langgraph,   name: LangGraph }
+    - { slug: claude-code, name: Claude Code }
+    - { slug: mitmproxy,   name: mitmproxy }
+- group: Observability · Eval
+  items:
+    - { slug: langfuse,  name: Langfuse }
+    - { slug: grafana,   name: Grafana · Prometheus }
+    - { slug: promptfoo, name: promptfoo }
+- group: Backend · Data
+  items:
+    - { slug: spring-boot, name: Spring Boot }
+    - { slug: fastapi,     name: FastAPI }
+    - { slug: kafka,       name: Kafka }
+    - { slug: postgresql,  name: PostgreSQL }
+- group: Infra · CI
+  items:
+    - { slug: eks,       name: Kubernetes · EKS }
+    - { slug: gitlab-ci, name: GitLab CI }
+    - { slug: docker,    name: Docker }

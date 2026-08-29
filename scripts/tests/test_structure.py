@@ -56,5 +56,17 @@ class ConfigAndData(unittest.TestCase):
             self.assertTrue(k["bg"].startswith("--") and k["fg"].startswith("--"))
 
 
+class StackStubs(unittest.TestCase):
+    def test_stubs_match_stacks_yml_exactly(self):
+        slugs = {it["slug"] for g in load_yaml("_data/stacks.yml") for it in g["items"]}
+        files = {p.stem for p in (ROOT / "stack").glob("*.md")}
+        self.assertEqual(files, slugs, "scripts/gen-stack-stubs.py 를 다시 실행할 것")
+        for p in (ROOT / "stack").glob("*.md"):
+            fm = yaml.safe_load(p.read_text(encoding="utf-8").split("---")[1])
+            self.assertEqual(fm["layout"], "stack")
+            self.assertEqual(fm["stack"], p.stem)
+            self.assertEqual(fm["permalink"], f"/stack/{p.stem}/")
+
+
 if __name__ == "__main__":
     unittest.main()

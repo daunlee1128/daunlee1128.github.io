@@ -1,0 +1,30 @@
+---
+layout: default
+---
+{%- assign all = site.tech | concat: site.insights | sort: "date" | reverse -%}
+{%- if page.stack -%}
+  {%- assign posts = all | where_exp: "p", "p.stack contains page.stack" -%}
+  {%- assign show_type = true -%}
+{%- elsif page.posts_filter == "tech" -%}
+  {%- assign posts = all | where: "collection", "tech" -%}{%- assign show_type = page.show_type -%}
+{%- elsif page.posts_filter == "insights" -%}
+  {%- assign posts = all | where: "collection", "insights" -%}{%- assign show_type = page.show_type -%}
+{%- else -%}
+  {%- assign posts = all -%}{%- assign show_type = page.show_type -%}
+{%- endif -%}
+{%- assign active = page.stack | split: "," -%}
+<div class="layout">
+{% include sidebar-stacks.html active=active %}
+<main class="ct">
+  <h1 class="t">{{ page.title }}<small>{{ posts | size }}</small></h1>
+  {%- if page.stack -%}<p class="lead">{{ page.title }} 스택이 붙은 글. 종류 무관 최신순.</p>
+  {%- elsif page.lead -%}<p class="lead">{{ page.lead }}</p>{%- endif -%}
+  {% include quicknav-filter.html posts=posts part="mobile" %}
+  <div class="rows">
+    {%- for p in posts -%}{% include post-row.html post=p show_type=show_type %}{%- endfor -%}
+  </div>
+  <p class="empty" hidden>이 종류의 글이 아직 없습니다.</p>
+  {%- if posts.size == 0 -%}<p class="empty">아직 글이 없습니다.</p>{%- endif -%}
+</main>
+{% include quicknav-filter.html posts=posts part="desktop" %}
+</div>

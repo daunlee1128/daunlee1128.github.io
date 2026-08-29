@@ -100,6 +100,8 @@ h1.t small{margin-left:var(--sp-2);font-size:var(--fs-3);font-weight:400;color:v
 .pn a small{display:block;color:var(--gray-11);font-size:var(--fs-1);margin-bottom:2px}
 .pn a.next{text-align:right;grid-column:2}
 .ft{padding:var(--sp-4) var(--sp-5);border-top:1px solid var(--gray-6);color:var(--gray-10);font-size:var(--fs-1);line-height:var(--lh-1)}
+.ct .seg{margin-left:0;margin-right:0}
+.ct.solo{margin:0 auto}
 /* explain card (mobile 글 상단 · page 레이아웃) */
 .xcard{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-3);margin-top:var(--sp-4);padding:var(--sp-3) var(--sp-4)}
 .xcard b{display:block;font-size:var(--fs-2)} .xcard small{color:var(--gray-11);font-size:var(--fs-1)} .xcard .go{color:var(--accent-11);font-weight:500;white-space:nowrap}

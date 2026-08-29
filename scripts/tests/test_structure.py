@@ -166,5 +166,39 @@ class IncludesAndDefaultLayout(unittest.TestCase):
         self.assertIn("{{ content }}", d)
 
 
+class ListPages(unittest.TestCase):
+    def read(self, rel):
+        p = ROOT / rel
+        self.assertTrue(p.is_file(), f"{rel} 없음")
+        return p.read_text(encoding="utf-8")
+
+    def fm(self, rel):
+        return yaml.safe_load(self.read(rel).split("---")[1])
+
+    def test_list_layout_wires_includes_and_filters(self):
+        l = self.read("_layouts/list.html")
+        self.assertTrue(l.startswith("---\nlayout: default\n---"))
+        for s in ["site.tech | concat: site.insights | sort: \"date\" | reverse", "page.posts_filter", "page.stack",
+                  "sidebar-stacks.html active=", "post-row.html post=", 'quicknav-filter.html posts=posts part="mobile"',
+                  'quicknav-filter.html posts=posts part="desktop"', 'class="layout"', 'class="rows"', 'class="empty" hidden']:
+            self.assertIn(s, l, s)
+
+    def test_stack_layout_wraps_list(self):
+        self.assertTrue(self.read("_layouts/stack.html").startswith("---\nlayout: list\n---"))
+
+    def test_index_pages_front_matter(self):
+        home = self.fm("index.md")
+        self.assertEqual((home["layout"], home["permalink"], home["posts_filter"], home["show_type"]), ("list", "/", "all", True))
+        tech = self.fm("tech/index.md")
+        self.assertEqual((tech["layout"], tech["permalink"], tech["posts_filter"], tech["section"]), ("list", "/tech/", "tech", "tech"))
+        ins = self.fm("insights/index.md")
+        self.assertEqual((ins["layout"], ins["permalink"], ins["posts_filter"], ins["section"]), ("list", "/insights/", "insights", "insights"))
+
+    def test_dev_build_script_exists_and_is_executable(self):
+        p = ROOT / "scripts" / "dev-build.sh"
+        self.assertTrue(p.is_file())
+        self.assertTrue(p.stat().st_mode & 0o111, "chmod +x")
+
+
 if __name__ == "__main__":
     unittest.main()

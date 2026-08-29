@@ -237,5 +237,16 @@ class PostAndPage(unittest.TestCase):
         self.assertIn(".meta-row", css)
 
 
+class Feed(unittest.TestCase):
+    def test_feed_is_atom_over_both_collections(self):
+        f = (ROOT / "feed.xml").read_text(encoding="utf-8")
+        self.assertTrue(f.startswith("---\npermalink: /feed.xml\nsitemap: false\n---"))
+        self.assertIn('<feed xmlns="http://www.w3.org/2005/Atom">', f)
+        self.assertIn('site.tech | concat: site.insights | sort: "date" | reverse', f)
+        self.assertIn("limit: 20", f)
+        for s in ["xml_escape", "date_to_xmlschema", "p.collection", "p.kind", "p.stack", "p.summary", "p.content"]:
+            self.assertIn(s, f, s)
+
+
 if __name__ == "__main__":
     unittest.main()

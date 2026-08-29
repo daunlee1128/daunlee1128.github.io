@@ -15,7 +15,7 @@ def git(cwd, *args):
 
 
 class TempRepo(unittest.TestCase):
-    """임시 repo: 스크립트·훅 복사, 깨끗한 글 1편 커밋, .denylist(무시됨) 작성."""
+    """임시 repo: 스크립트·훅·.allowlist 복사, 깨끗한 글 1편 커밋, .denylist(무시됨) 작성."""
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -25,6 +25,7 @@ class TempRepo(unittest.TestCase):
         (self.repo / "_tech").mkdir()
         shutil.copy(CHECK, self.repo / "scripts" / "check-publish.sh")
         shutil.copy(HOOK, self.repo / ".githooks" / "pre-push")
+        shutil.copy(ROOT / ".allowlist", self.repo / ".allowlist")
         git(self.repo, "init", "-q", "-b", "main")
         git(self.repo, "config", "user.name", "t")
         git(self.repo, "config", "user.email", "t@" + "users.noreply.github.com")
@@ -128,6 +129,44 @@ class CheckPublish(TempRepo):
                 self.assertEqual(r.returncode, 1, r.stdout)
                 self.assertIn(f"drafts/{name}.md:4:", r.stderr)
 
+    def test_range_mode_catches_blob_deleted_in_later_commit(self):
+        self.commit_file("_tech/leak.md", "---\ntitle: x\n---\nAcme Corp 내부\n")
+        leak = git(self.repo, "rev-parse", "HEAD").stdout.strip()
+        git(self.repo, "rm", "-q", "_tech/leak.md")
+        git(self.repo, "commit", "-q", "-m", "remove leak")
+        r = self.check("--tree", "HEAD")
+        self.assertEqual(r.returncode, 0, "tip tree is clean")
+        r = self.check("--range", "HEAD~2..HEAD")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("_tech/leak.md:4:", r.stderr)
+
+    def test_tree_mode_fails_closed_on_bad_sha(self):
+        r = self.check("--tree", "0" * 40)
+        self.assertEqual(r.returncode, 1)
+        self.assertNotIn("OK:", r.stdout)
+
+    def test_allowlist_masks_only_the_literal(self):
+        (self.repo / "drafts").mkdir(exist_ok=True)
+        f = self.repo / "drafts" / "ssh.md"
+        f.write_text("---\ntitle: x\n---\n`git@" + "github.com:Kong/kong.git` 를 클론한다\n", encoding="utf-8")
+        r = self.check("drafts/ssh.md")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        f.write_text("---\ntitle: x\n---\n`git@" + "github.com:Kong/kong.git` 그리고 acme corp\n", encoding="utf-8")
+        r = self.check("drafts/ssh.md")
+        self.assertEqual(r.returncode, 1, "allowlist 는 줄 전체를 면제하지 않는다")
+
+    def test_allowlist_entry_matching_denylist_is_rejected(self):
+        (self.repo / ".allowlist").write_text("Acme Corporation\n", encoding="utf-8")
+        r = self.check("--tree", "HEAD")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn(".allowlist", r.stderr)
+
+    def test_allowlist_short_entry_is_rejected(self):
+        (self.repo / ".allowlist").write_text("git@\n", encoding="utf-8")
+        r = self.check("--tree", "HEAD")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn(".allowlist", r.stderr)
+
 
 class PrePushHook(TempRepo):
     def setUp(self):
@@ -151,6 +190,22 @@ class PrePushHook(TempRepo):
         self.assertIn("_tech/leak.md:4:", r.stderr)
         self.assertNotIn("no-verify", r.stderr)
         self.assertEqual(git(Path(self.tmp.name), "-C", str(self.remote), "rev-list", "--all", "--count").stdout.strip(), "0")
+
+    def test_push_rejected_when_leak_was_deleted_before_push(self):
+        self.commit_file("_tech/leak.md", "---\ntitle: x\n---\nproj-phoenix 배포\n")
+        git(self.repo, "rm", "-q", "_tech/leak.md")
+        git(self.repo, "commit", "-q", "-m", "remove leak")
+        r = self.push()
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("_tech/leak.md:4:", r.stderr)
+        self.assertEqual(git(Path(self.tmp.name), "-C", str(self.remote), "rev-list", "--all", "--count").stdout.strip(), "0")
+
+    def test_second_push_scans_only_new_commits(self):
+        self.assertEqual(self.push().returncode, 0)
+        self.commit_file("_tech/more.md", "---\ntitle: y\n---\n깨끗한 글\n")
+        r = self.push()
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("range:", r.stderr)
 
     def test_push_rejected_without_denylist(self):
         (self.repo / ".denylist").unlink()

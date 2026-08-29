@@ -1,0 +1,5 @@
+# check-publish 허용 목록 — 공개 무해한 문자열만. 한 줄 = 리터럴 부분 문자열(정규식 아님).
+# 매치된 줄 전체가 아니라 이 리터럴만 검사에서 제외된다. denylist 를 완화하는 용도가 아니다.
+git@github.com:
+git@gitlab.com:
+https://gitlab.com/

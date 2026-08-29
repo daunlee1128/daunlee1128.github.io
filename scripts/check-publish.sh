@@ -50,6 +50,12 @@ while IFS= read -r line || [ -n "$line" ]; do
   [ -n "$pat" ] && patterns+=("$pat")
 done < "$DENYLIST"
 
+# 1''. 자기 보호 — denylist 정규식 구문 오류 = fail-closed (silent fail-open 방지)
+for pat in "${patterns[@]}"; do
+  printf '' | grep -E -e "$pat" >/dev/null 2>&1
+  if [ $? -eq 2 ]; then say "FAIL: .denylist 잘못된 정규식: $pat"; exit 1; fi
+done
+
 content_of() {  # $1 = path
   if [ "$mode" = tree ]; then git -C "$ROOT" show "$tree:$1"; else cat "$ROOT/$1" 2>/dev/null || cat "$1"; fi
 }
@@ -61,10 +67,10 @@ for f in "${files[@]}"; do
   scanned=$((scanned+1))
   body=$(content_of "$f") || { say "FAIL: $f 를 읽을 수 없음"; fail=1; continue; }
   for pat in "${patterns[@]}"; do
-    hits=$(printf '%s\n' "$body" | grep -Ein -e "$pat") && { printf '%s\n' "$hits" | sed "s|^|$f:|" >&2; fail=1; }
+    hits=$(printf '%s\n' "$body" | grep -Ein -e "$pat") && { printf '%s\n' "$hits" | awk -v f="$f" '{print f ":" $0}' >&2; fail=1; }
   done
   for pat in "${BUILTIN[@]}"; do
-    hits=$(printf '%s\n' "$body" | grep -En -e "$pat") && { printf '%s\n' "$hits" | sed "s|^|$f:|" >&2; fail=1; }
+    hits=$(printf '%s\n' "$body" | grep -Ein -e "$pat") && { printf '%s\n' "$hits" | awk -v f="$f" '{print f ":" $0}' >&2; fail=1; }
   done
 done
 

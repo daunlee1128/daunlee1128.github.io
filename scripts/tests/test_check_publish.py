@@ -111,6 +111,23 @@ class CheckPublish(TempRepo):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("OK:", r.stdout)
 
+    def test_invalid_denylist_regex_fails_closed(self):
+        (self.repo / ".denylist").write_text("acme(bad\n", encoding="utf-8")
+        r = self.check("--tree", "HEAD")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("잘못된 정규식", r.stderr)
+        self.assertNotIn("OK:", r.stdout)
+
+    def test_builtin_host_patterns_are_case_insensitive(self):
+        (self.repo / "drafts").mkdir(exist_ok=True)
+        for name, text in {"gitlab-caps": "https://" + "GitLab.example.com/g/r", "internal-caps": "http://payments" + ".Internal/v1"}.items():
+            with self.subTest(case=name):
+                f = self.repo / "drafts" / f"{name}.md"
+                f.write_text(f"---\ntitle: x\n---\n{text}\n", encoding="utf-8")
+                r = self.check(f"drafts/{name}.md")
+                self.assertEqual(r.returncode, 1, r.stdout)
+                self.assertIn(f"drafts/{name}.md:4:", r.stderr)
+
 
 class PrePushHook(TempRepo):
     def setUp(self):

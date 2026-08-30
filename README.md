@@ -58,11 +58,11 @@ explain: /explain/name.html   # 선택
 
 ## 계정 생성 후 바꿀 것
 
-- [ ] `_config.yml`: `title` · `handle` · `url` · `github_url` 을 실제 계정 값으로
-- [ ] 디렉터리(그리고 저장소 이름)를 `<id>.github.io` 로 rename
-- [ ] rename 뒤 `git config core.hooksPath .githooks` 를 다시 실행하고 `git config core.hooksPath` 로 확인
-- [ ] `.denylist` 작성(없으면 push 가 fail-closed 로 거부된다)
-- [ ] `git remote add origin https://github.com/<id>/<id>.github.io.git`
+- [x] `_config.yml`: `title` · `handle` · `url` · `github_url` 을 실제 계정 값으로
+- [x] 디렉터리(그리고 저장소 이름)를 `daunlee1128.github.io` 로 rename
+- [x] rename 뒤 `git config core.hooksPath .githooks` 를 다시 실행하고 `git config core.hooksPath` 로 확인
+- [x] `.denylist` 작성(없으면 push 가 fail-closed 로 거부된다)
+- [x] `git remote add origin https://github.com/daunlee1128/daunlee1128.github.io.git`
 - [ ] GitHub Pages 설정: Source = 브랜치 `main` / 루트(`/`)
 
 ## 스택 추가

@@ -35,6 +35,7 @@ class ConfigAndData(unittest.TestCase):
         stack_default = [d for d in cfg["defaults"] if d["scope"] == {"path": "stack"}][0]
         self.assertEqual(stack_default["values"]["section"], "stack")
         self.assertEqual(sorted(cfg["plugins"]), ["jekyll-seo-tag", "jekyll-sitemap"])
+        self.assertIs(cfg.get("future"), True, "미래 날짜 글이 조용히 빠지지 않도록 future: true")
         for key in ["handle", "tagline", "description", "github_url", "url"]:
             self.assertIn(key, cfg, f"_config.yml에 {key} 없음")
         for ex in ["drafts", "scripts", "Gemfile", "README.md", ".githooks"]:

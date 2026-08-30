@@ -32,7 +32,7 @@ front matter 계약:
 ---
 kind: troubleshooting      # tech 전용: design | config | impl | ops | troubleshooting
 title: 제목
-date: 2026-09-02
+date: 2026-09-02          # 미래 날짜여도 게시된다 (future: true) — 예약 발행 없음
 stack: [kong, bedrock]     # _data/stacks.yml 슬러그만
 tags: [사용기]              # 선택 (insights 구분용)
 summary: 한 줄 요약

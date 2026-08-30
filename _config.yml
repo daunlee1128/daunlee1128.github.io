@@ -8,6 +8,8 @@ baseurl: ""
 github_url: "https://github.com/hong.gildong"
 lang: ko
 timezone: Asia/Seoul
+# 게시 = 파일을 컬렉션으로 옮기는 행위. date 는 예약이 아니라 메타데이터 → 미래 날짜여도 빌드한다 (기본 false 면 조용히 사라짐)
+future: true
 
 plugins:
   - jekyll-seo-tag

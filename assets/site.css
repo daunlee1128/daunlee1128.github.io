@@ -3,9 +3,9 @@
 html,body{margin:0;min-height:100%}
 body{background:var(--color-background);color:var(--gray-12);font-family:var(--sans);font-size:var(--fs-2);line-height:var(--lh-2);-webkit-text-size-adjust:100%}
 a{color:inherit;text-decoration:none}
-.layout{display:flex;align-items:stretch;min-height:calc(100vh - 56px - 49px)}
+.layout{display:flex;align-items:stretch;min-height:calc(100vh - 56px);max-width:1280px;margin:0 auto}
 /* header */
-.hd{display:flex;align-items:center;gap:var(--sp-5);height:56px;padding:0 var(--sp-5);border-bottom:1px solid var(--gray-6);background:var(--color-background);position:sticky;top:0;z-index:10}
+.hd{display:flex;align-items:center;gap:var(--sp-5);height:56px;padding:0 max(var(--sp-5),calc((100% - 1280px) / 2));border-bottom:1px solid var(--gray-6);background:var(--color-background);position:sticky;top:0;z-index:10}
 .hd .brand{display:flex;align-items:baseline;gap:var(--sp-2);font-weight:700;font-size:var(--fs-3)}
 .hd .brand small{font-weight:400;color:var(--gray-11);font-size:var(--fs-1)}
 .tabs{display:flex;gap:var(--sp-1);height:56px;margin-left:var(--sp-3)}
@@ -102,7 +102,6 @@ h1.t small{margin-left:var(--sp-2);font-size:var(--fs-3);font-weight:400;color:v
 .pn a{padding:var(--sp-3) var(--sp-4);border-radius:var(--r-3);box-shadow:var(--shadow-2);background:var(--color-panel);font-size:var(--fs-2)}
 .pn a small{display:block;color:var(--gray-11);font-size:var(--fs-1);margin-bottom:2px}
 .pn a.next{text-align:right;grid-column:2}
-.ft{padding:var(--sp-4) var(--sp-5);border-top:1px solid var(--gray-6);color:var(--gray-10);font-size:var(--fs-1);line-height:var(--lh-1)}
 .ct .seg{margin-left:0;margin-right:0}
 .ct.solo{margin:0 auto}
 /* explain card (mobile 글 상단 · page 레이아웃) */
@@ -147,7 +146,7 @@ h1.t small{margin-left:var(--sp-2);font-size:var(--fs-3);font-weight:400;color:v
 }
 /* print: 본문만, 링크 URL 병기 */
 @media print{
-  .hd,.mhd,.mtabs,.strip,.seg,.sb,.qn,.pn,.ft,.toc-card,[data-theme-toggle]{display:none !important}
+  .hd,.mhd,.mtabs,.strip,.seg,.sb,.qn,.pn,.toc-card,[data-theme-toggle]{display:none !important}
   .layout{display:block} .ct{max-width:none;padding:0}
   body{background:#fff;color:#000;font-size:11pt}
   .art a[href^="http"]::after{content:" (" attr(href) ")";font-size:.85em;color:#555}

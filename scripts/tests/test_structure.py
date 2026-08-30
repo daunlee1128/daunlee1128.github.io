@@ -128,7 +128,7 @@ class BuildTestRegex(unittest.TestCase):
                 self.assertIsNone(EXTERNAL_SUBRESOURCE.search(html))
 
 
-INCLUDES = ["head.html", "header.html", "footer.html", "kind-badge.html", "post-row.html",
+INCLUDES = ["head.html", "header.html", "kind-badge.html", "post-row.html",
             "sidebar-stacks.html", "quicknav-filter.html", "quicknav-toc.html"]
 
 
@@ -200,9 +200,16 @@ class IncludesAndDefaultLayout(unittest.TestCase):
     def test_default_layout(self):
         d = self.read("_layouts/default.html")
         self.assertIn('<html lang="{{ site.lang }}">', d)
-        for inc in ["head.html", "header.html", "footer.html"]:
+        for inc in ["head.html", "header.html"]:
             self.assertIn(f"{{% include {inc} %}}", d)
         self.assertIn("{{ content }}", d)
+        self.assertNotIn("footer", d, "footer 없음 (2026-08-30 제거)")
+
+    def test_centered_1280(self):
+        css = self.read("assets/site.css")
+        self.assertRegex(css, r"(?m)^\.layout\{[^\n]*max-width:1280px;margin:0 auto", "3단 레이아웃은 1280 가운데 정렬")
+        self.assertRegex(css, r"(?m)^\.hd\{[^\n]*calc\(\(100% - 1280px\) / 2\)", "헤더 내용도 같은 폭에 맞춤")
+        self.assertNotIn(".ft{", css)
 
 
 class ListPages(unittest.TestCase):

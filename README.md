@@ -63,7 +63,7 @@ explain: /explain/name.html   # 선택
 - [x] rename 뒤 `git config core.hooksPath .githooks` 를 다시 실행하고 `git config core.hooksPath` 로 확인
 - [x] `.denylist` 작성(없으면 push 가 fail-closed 로 거부된다)
 - [x] `git remote add origin https://github.com/daunlee1128/daunlee1128.github.io.git`
-- [ ] GitHub Pages 설정: Source = 브랜치 `main` / 루트(`/`)
+- [x] GitHub Pages 설정: Source = 브랜치 `main` / 루트(`/`) — `<id>.github.io` repo라 첫 push 시 자동 활성화됨(2026-08-30)
 
 ## 스택 추가
 

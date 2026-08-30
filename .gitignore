@@ -8,3 +8,5 @@ _site/
 .sass-cache/
 Gemfile.lock
 __pycache__/
+# humanize-korean 작업 폴더 (blog-post 스킬을 블로그 클론에서 부를 때)
+_workspace/

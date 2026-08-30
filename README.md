@@ -17,7 +17,7 @@ git config core.hooksPath                      # → .githooks 가 나와야 한
 
 ## 글 올리기
 
-1. 초안은 `drafts/` (gitignore). `/blog-post` 스킬이 여기에 만든다.
+1. 초안은 `drafts/` (gitignore). `/blog-post` 스킬이 여기에 만든다 — 스킬은 이 클론을 `BLOG_REPO` 환경변수 또는 `~/.config/blog-post/repo`(경로 한 줄)로 찾는다. 둘 다 없거나 `.denylist` 가 없으면 스킬이 중단된다.
 2. 미리 검사: `scripts/check-publish.sh drafts/<slug>.md`
 3. 게시 = 컬렉션으로 이동: `git mv` 가 아니라 `mv drafts/<slug>.md _tech/` (또는 `_insights/`). front matter의 임시 `source:` 키는 지운다.
 4. 커밋 → push. pre-push 훅이 push 되는 커밋 범위의 모든 blob(뒤 커밋에서 지운 파일 포함)을 검사한다(`check-publish.sh --range`).

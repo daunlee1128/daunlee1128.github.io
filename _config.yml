@@ -1,11 +1,11 @@
 # 사이트 메타 — handle·github_url은 계정 생성 뒤(D11·D12) 바꾼다
-title: hong.gildong
-handle: hong.gildong
+title: daunlee1128
+handle: daunlee1128
 tagline: backend · ai platform
 description: AI Gateway · Agent Runtime · LLMOps 를 만들고 운영하며 남기는 기록
-url: "https://hong.gildong.github.io"
+url: "https://daunlee1128.github.io"
 baseurl: ""
-github_url: "https://github.com/hong.gildong"
+github_url: "https://github.com/daunlee1128"
 lang: ko
 timezone: Asia/Seoul
 # 게시 = 파일을 컬렉션으로 옮기는 행위. date 는 예약이 아니라 메타데이터 → 미래 날짜여도 빌드한다 (기본 false 면 조용히 사라짐)

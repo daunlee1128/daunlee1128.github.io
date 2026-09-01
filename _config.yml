@@ -1,8 +1,8 @@
-# 사이트 메타 — handle·github_url은 계정 생성 뒤(D11·D12) 바꾼다
+# 사이트 메타
 title: daunlee1128
 handle: daunlee1128
-tagline: backend · ai platform
-description: AI Gateway · Agent Runtime · LLMOps 를 만들고 운영하며 남기는 기록
+tagline: backend · infra · ai platform
+description: 만들고 운영하며 남긴 기록 — 설계 · 설정 · 구현 · 운영 · 문제 해결, 그리고 인사이트
 url: "https://daunlee1128.github.io"
 baseurl: ""
 github_url: "https://github.com/daunlee1128"

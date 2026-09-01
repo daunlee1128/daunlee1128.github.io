@@ -29,3 +29,4 @@
     - { slug: eks,       name: Kubernetes · EKS }
     - { slug: gitlab-ci, name: GitLab CI }
     - { slug: docker,    name: Docker }
+    - { slug: github-pages, name: GitHub Pages }

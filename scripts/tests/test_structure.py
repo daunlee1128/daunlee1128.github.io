@@ -95,18 +95,35 @@ class Assets(unittest.TestCase):
     def test_site_css_has_components_responsive_and_print(self):
         css = self.read("assets/site.css")
         for sel in [".hd", ".sb", ".qn", ".ct", ".row", ".badge.soft", ".badge.outline", ".callout", ".pn",
-                    ".rg", ".toc", ".chips", ".seg", ".mhd", ".mtabs", ".layout", ".desktop-only", ".mobile-only"]:
+                    ".rg", ".toc", ".chips", ".seg", ".mhd", ".mtabs", ".layout", ".desktop-only", ".mobile-only",
+                    ".mermaid", ".fig-scroll", ".figcap", ".d-box", ".d-l", ".d-t", ".d-lbl", ".d-band"]:
             self.assertIn(sel, css, sel)
         self.assertIn("@media(max-width:768px)", css.replace(" ", ""))
         self.assertIn("@media print", css)
         self.assertNotIn("url(", css)
 
     def test_js_files_are_small_and_self_contained(self):
-        for rel, must in [("assets/theme.js", "localStorage"), ("assets/filter.js", "data-kind")]:
+        for rel, must, cap in [("assets/theme.js", "localStorage", 2500),
+                               ("assets/filter.js", "data-kind", 2500),
+                               ("assets/diagram.js", "language-mermaid", 4500)]:
             js = self.read(rel)
             self.assertIn(must, js)
-            self.assertNotIn("http", js)
-            self.assertLess(len(js), 2500, f"{rel} 는 최소 JS — 2.5KB 이하")
+            # 외부 서브리소스 금지는 HTML 태그뿐 아니라 JS 안의 로더에도 적용된다
+            # (동적 import·주입된 <script> 는 빌드 HTML 정규식에 안 걸린다).
+            self.assertNotIn("http", js, f"{rel} 가 외부 URL 을 싣는다 — 라이브러리는 assets/ 에 동봉한다")
+            self.assertLess(len(js), cap, f"{rel} 는 최소 JS — {cap // 1000}KB 이하")
+
+    def test_mermaid_is_vendored_not_fetched_from_cdn(self):
+        """다이어그램 라이브러리는 동봉한다 — 이 블로그는 외부 요청을 보내지 않는다."""
+        lib = ROOT / "assets" / "mermaid.min.js"
+        self.assertTrue(lib.is_file(), "assets/mermaid.min.js 없음 — mermaid 를 동봉해야 한다")
+        self.assertGreater(lib.stat().st_size, 500_000, "번들이 아니라 청크 로더로 보인다(외부 요청이 남는다)")
+        self.assertIn('globalThis["mermaid"]', lib.read_text(encoding="utf-8")[-500:],
+                      "UMD 번들이 아니다 — diagram.js 는 window.mermaid 를 기대한다")
+        # 그림 없는 글이 2.7MB 를 받지 않도록, 로더는 mermaid 블록이 있을 때만 주입한다
+        js = self.read("assets/diagram.js")
+        self.assertLess(js.index("if (!codes.length) return"), js.index("document.head.appendChild"),
+                        "mermaid 주입 전에 조기 반환이 와야 한다")
 
 
 class BuildTestRegex(unittest.TestCase):
@@ -160,9 +177,9 @@ class IncludesAndDefaultLayout(unittest.TestCase):
         self.assertLess(head.index("localStorage.getItem('theme')"), head.index("tokens.css"), "플래시 방지 스크립트는 CSS 앞")
         self.assertIn("{% seo %}", head)
         self.assertIn("application/atom+xml", head)
-        for a in ["tokens.css", "site.css", "theme.js", "filter.js"]:
+        for a in ["tokens.css", "site.css", "theme.js", "filter.js", "diagram.js"]:
             self.assertIn(a, head)
-        self.assertEqual(head.count("<script"), 3, "인라인 1 + defer 2")
+        self.assertEqual(head.count("<script"), 4, "인라인 1 + defer 3")
 
     def test_header_has_tabs_github_rss_toggle_and_no_real_name(self):
         h = self.read("_includes/header.html")
@@ -267,16 +284,17 @@ class PostAndPage(unittest.TestCase):
         self.assertIn('class="ct art solo"', p)
         self.assertNotIn("sidebar-stacks", p)
 
-    def test_about_matches_d1_scope(self):
+    def test_about_scope(self):
         a = self.read("about.md")
         fm = yaml.safe_load(a.split("---")[1])
         self.assertEqual((fm["layout"], fm["section"], fm["permalink"]), ("page", "about", "/about/"))
-        for kw in ["AI Gateway", "Agent Runtime", "LLMOps", "site.handle", "site.github_url", "/feed.xml"]:
+        # 주제는 좁히지 않는다 — 링크와 사이트 메타만 계약으로 고정한다
+        for kw in ["site.handle", "site.tagline", "site.github_url", "/tech/", "/insights/", "/feed.xml"]:
             self.assertIn(kw, a, kw)
         self.assertNotRegex(a, r"[\w.+-]+@[\w-]+\.[\w.]+", "이메일 금지")
         self.assertNotRegex(a, r"01[016789]-?\d{3,4}-?\d{4}", "전화번호 금지")
         for banned in ["대학", "University", "년 ~", "재직", "경력 "]:
-            self.assertNotIn(banned, a, f"About에 {banned!r} 금지(D1)")
+            self.assertNotIn(banned, a, f"About에 {banned!r} 금지")
 
     def test_callout_and_meta_row_css(self):
         css = self.read("assets/site.css")

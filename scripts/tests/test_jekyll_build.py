@@ -78,7 +78,8 @@ class JekyllBuild(unittest.TestCase):
 
     def test_feed_and_sitemap(self):
         f = self.read("feed.xml")
-        self.assertEqual(f.count("<entry>"), 3)
+        published = len(list((ROOT / "_tech").glob("*.md"))) + len(list((ROOT / "_insights").glob("*.md")))
+        self.assertEqual(f.count("<entry>"), 3 + published, "샘플 3편 + 게시된 글 전부")
         self.assertIn('<category term="tech"/>', f)
         self.assertIn('<category term="insights"/>', f)
         self.assertIn('<category term="troubleshooting"/>', f)
@@ -93,9 +94,43 @@ class JekyllBuild(unittest.TestCase):
         self.assertIn("Kong<small>2</small>", k)
         self.assertIn('<span class="tp">tech</span>', k)
         a = self.read("about/index.html")
-        self.assertIn("AI Gateway · Agent Runtime · LLMOps", a)
+        for u in ["/tech/", "/insights/", "/feed.xml"]:
+            self.assertIn(u, a)
         self.assertNotIn('class="sb', a)
 
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipUnless(HAVE_BUNDLE, "bundle 없음 — Task 0 참고")
+class Diagrams(unittest.TestCase):
+    """그림 계약이 빌드를 살아서 통과하는지 — 규약의 원본은 blog-post 의 references/visuals.md."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.html = (SITE / "tech" / "sample-sigv4-403" / "index.html").read_text(encoding="utf-8")
+
+    def test_mermaid_fence_survives_as_language_tagged_code(self):
+        """diagram.js 는 pre > code.language-mermaid 를 찾는다. rouge 가 감싸도 이 클래스는 남아야 한다."""
+        self.assertIn('class="language-mermaid"', self.html)
+        self.assertIn("flowchart TD", self.html)
+
+    def test_caption_paragraph_is_a_lone_italic_line(self):
+        """diagram.js 가 p > em 하나짜리 문단을 캡션(p.figcap)으로 승격한다."""
+        self.assertRegex(self.html, r"<p><em>서명은 pod 안에서 만들어진다[^<]*</em></p>")
+
+    def test_inline_svg_passes_through_with_class_contract(self):
+        for token in ['<figure class="fig">', 'class="fig-scroll"', 'class="d-box"',
+                      'class="d-t"', 'class="d-l"', "<figcaption>"]:
+            with self.subTest(token=token):
+                self.assertIn(token, self.html)
+
+    def test_inline_svg_hardcodes_no_colors(self):
+        """색을 박으면 다크모드에서 깨진다 — 색은 d-* 클래스가 준다."""
+        svg = self.html[self.html.index("<figure"):self.html.index("</figure>")]
+        self.assertNotRegex(svg, r'(fill|stroke)="#')
+
+    def test_mermaid_library_is_served_and_loader_is_wired(self):
+        self.assertTrue((SITE / "assets" / "mermaid.min.js").is_file(), "동봉한 mermaid 가 빌드에 없다")
+        self.assertIn("/assets/diagram.js", self.html)

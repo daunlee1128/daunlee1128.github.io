@@ -88,7 +88,7 @@ h1.t small{margin-left:var(--sp-2);font-size:var(--fs-3);font-weight:400;color:v
 .art pre code{padding:0;background:none;font-size:inherit}
 .art table{border-collapse:collapse;margin:var(--sp-3) 0 0;font-size:var(--fs-2);display:block;overflow-x:auto}
 .art th,.art td{border:1px solid var(--gray-6);padding:6px 10px;text-align:left;vertical-align:top}
-.art th{background:var(--gray-2)}
+.art th{background:var(--gray-2);white-space:nowrap}
 .art blockquote{margin:var(--sp-3) 0 0;padding:0 var(--sp-4);border-left:2px solid var(--gray-6);color:var(--gray-11)}
 .art hr{border:0;border-top:1px solid var(--gray-6);margin:var(--sp-6) 0 0}
 .callout{display:flex;gap:var(--sp-3);margin:var(--sp-5) 0 0;padding:var(--sp-3) var(--sp-4);border-radius:var(--r-3);background:var(--accent-3);color:var(--accent-11)}
@@ -96,6 +96,28 @@ h1.t small{margin-left:var(--sp-2);font-size:var(--fs-3);font-weight:400;color:v
 .callout b{display:block;font-weight:700;margin-bottom:2px}
 .callout p{margin:0;font-size:var(--fs-2);line-height:var(--lh-2);color:var(--accent-12)}
 .callout strong{color:var(--accent-11)}
+/* 다이어그램 — mermaid 렌더 결과 · 인라인 SVG(.fig) · 그림 캡션. 붙이는 규약은 blog-draft references/visuals.md */
+.art .mermaid{margin:var(--sp-5) 0 0;overflow-x:auto;border:1px solid var(--gray-6);border-radius:var(--r-3);background:var(--gray-1);padding:var(--sp-4)}
+.art .mermaid svg{display:block;margin:0 auto;height:auto}
+.art .fig{margin:var(--sp-5) 0 0}
+.art .fig-scroll{overflow-x:auto;border:1px solid var(--gray-6);border-radius:var(--r-3);background:var(--gray-1);padding:var(--sp-4) var(--sp-4) var(--sp-2)}
+.art .fig svg{display:block;width:100%;min-width:560px;height:auto;color:var(--gray-11)}
+.art figcaption,.art p.figcap{margin:var(--sp-2) 0 0;font-size:var(--fs-2);line-height:var(--lh-2);color:var(--gray-11)}
+.art p.figcap em{font-style:normal}
+/* 인라인 SVG 클래스 계약 — 글은 좌표와 구조만 쓰고 색·굵기·글꼴은 전부 여기서 온다(다크모드 자동) */
+.d-box{fill:var(--color-panel);stroke:currentColor;stroke-width:1.3}
+.d-box.d-alt{fill:var(--gray-3)}
+.d-box.d-em{stroke:var(--accent-9);stroke-width:1.8}
+.d-group{fill:none;stroke:var(--gray-7);stroke-width:1.2;stroke-dasharray:4 4}
+.d-t{fill:var(--gray-12);font-family:var(--mono);font-size:13px;font-weight:600}
+.d-t2{fill:var(--gray-11);font-family:var(--mono);font-size:11.5px}
+.d-l{stroke:currentColor;stroke-width:1.3;fill:none}
+.d-l.d-em{stroke:var(--accent-9);stroke-width:1.6}
+.d-l.d-dash{stroke-dasharray:5 4}
+.d-head{fill:currentColor}
+.d-lbl{fill:var(--gray-10);font-family:var(--mono);font-size:11px}
+.d-lbl.d-em{fill:var(--accent-11);font-weight:600}
+.d-band{fill:var(--gray-10);font-family:var(--mono);font-size:11px;letter-spacing:.09em}
 .meta-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:var(--sp-3)}
 .meta-row time{font-family:var(--mono);font-size:var(--fs-1);color:var(--gray-10)}
 .pn{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);margin-top:var(--sp-8)}

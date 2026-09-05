@@ -202,8 +202,8 @@ h1.t small{margin-left:var(--sp-2);font-size:var(--fs-3);font-weight:400;color:v
   .art table.stack,.art table.stack tbody,.art table.stack tr,.art table.stack td{display:block;width:100%}
   .art table.stack thead{display:none}
   .art table.stack tr{border:1px solid var(--gray-6);border-radius:var(--r-3);padding:4px 0;margin-top:var(--sp-2);background:var(--color-panel)}
-  .art table.stack td{border:0;padding:4px var(--sp-3) 4px 92px;position:relative}
-  .art table.stack td::before{content:attr(data-label);position:absolute;left:var(--sp-3);top:4px;color:var(--gray-10);font-size:var(--fs-1);line-height:18px;font-weight:500}
+  .art table.stack td{border:0;padding:4px var(--sp-3) 4px 92px;display:flow-root}
+  .art table.stack td::before{content:attr(data-label);float:left;width:72px;margin-left:-80px;color:var(--gray-10);font-size:var(--fs-1);line-height:18px;font-weight:500}
   .art table.stack td:first-child{font-weight:600}
   .row:hover{margin:0;padding-left:0;padding-right:0;background:none}
   .pn{grid-template-columns:1fr} .pn a.next{grid-column:auto;text-align:left}

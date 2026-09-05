@@ -8,7 +8,7 @@ permalink: /about/
 <div class="crumb"><span>About</span></div>
 <h1>{{ site.handle }} <small class="tag">{{ site.tagline }}</small></h1>
 
-백엔드 · 인프라 · AI 플랫폼을 만들고 운영하며 남긴 기록입니다.
+백엔드 · AI 게이트웨이 · LLMOps를 만들고 운영하며 남긴 기록입니다.
 한 번 겪고 흘려보내면 다음에 같은 자리에서 또 멈추는 것들을, 다시 꺼내 쓸 수 있는 형태로 적어 둡니다.
 
 {: #what data-k="WHAT"}

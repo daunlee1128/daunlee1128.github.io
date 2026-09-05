@@ -10,3 +10,5 @@ Gemfile.lock
 __pycache__/
 # 외부 도구가 이 클론 안에 만드는 작업 폴더
 _workspace/
+# Claude Code 로컬 설정·스킬
+.claude/

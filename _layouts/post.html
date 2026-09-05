@@ -23,7 +23,7 @@ layout: default
   <dl class="dl card desktop-only">
     <dt>date</dt><dd class="mono"><time datetime="{{ page.date | date: '%Y-%m-%d' }}">{{ page.date | date: "%Y-%m-%d" }}</time></dd>
     <dt>stack</dt><dd class="stk">{% for s in page.stack %}<a class="badge outline" href="{{ '/stack/' | append: s | append: '/' | relative_url }}">{{ s }}</a>{% endfor %}</dd>
-    {%- if page.explain -%}<dt>explain</dt><dd><a href="{{ page.explain | relative_url }}">{{ page.explain }} ↗</a> <span style="color:var(--gray-11)">— Background · Intuition · Code · Quiz</span></dd>{%- endif -%}
+    {%- if page.explain -%}<dt>explain</dt><dd><a href="{{ page.explain | relative_url }}">인터랙티브 설명 열기 ↗<small>Background · Intuition · Code · Quiz</small></a></dd>{%- endif -%}
   </dl>
   <div class="meta-row mobile-only">
     <time datetime="{{ page.date | date: '%Y-%m-%d' }}">{{ page.date | date: "%Y-%m-%d" }}</time>

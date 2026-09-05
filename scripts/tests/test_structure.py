@@ -96,8 +96,11 @@ class Assets(unittest.TestCase):
         css = self.read("assets/site.css")
         for sel in [".hd", ".sb", ".qn", ".ct", ".row", ".badge.soft", ".badge.outline", ".callout", ".pn",
                     ".rg", ".toc", ".chips", ".seg", ".mhd", ".mtabs", ".layout", ".desktop-only", ".mobile-only",
-                    ".mermaid", ".fig-scroll", ".figcap", ".d-box", ".d-l", ".d-t", ".d-lbl", ".d-band"]:
+                    ".mermaid", ".fig-scroll", ".figcap", ".d-box", ".d-l", ".d-t", ".d-lbl", ".d-band",
+                    ".ysep", ".more-btn", ".zoom", ".zoomdlg", "table.stack"]:
             self.assertIn(sel, css, sel)
+        # 가로 스크롤은 코드 블록(.art pre)과 모바일 종류 세그먼트(.seg)뿐 — 표·그림·스택 맵은 폭에 맞춘다
+        self.assertEqual(css.count("overflow-x:auto"), 2, ".art pre · .seg 만 overflow-x:auto")
         self.assertIn("@media(max-width:768px)", css.replace(" ", ""))
         self.assertIn("@media print", css)
         self.assertNotIn("url(", css)
@@ -105,6 +108,7 @@ class Assets(unittest.TestCase):
     def test_js_files_are_small_and_self_contained(self):
         for rel, must, cap in [("assets/theme.js", "localStorage", 2500),
                                ("assets/filter.js", "data-kind", 2500),
+                               ("assets/article.js", "data-label", 4000),
                                ("assets/diagram.js", "language-mermaid", 4500)]:
             js = self.read(rel)
             self.assertIn(must, js)
@@ -177,9 +181,9 @@ class IncludesAndDefaultLayout(unittest.TestCase):
         self.assertLess(head.index("localStorage.getItem('theme')"), head.index("tokens.css"), "플래시 방지 스크립트는 CSS 앞")
         self.assertIn("{% seo %}", head)
         self.assertIn("application/atom+xml", head)
-        for a in ["tokens.css", "site.css", "theme.js", "filter.js", "diagram.js"]:
+        for a in ["tokens.css", "site.css", "theme.js", "filter.js", "diagram.js", "article.js"]:
             self.assertIn(a, head)
-        self.assertEqual(head.count("<script"), 4, "인라인 1 + defer 3")
+        self.assertEqual(head.count("<script"), 5, "인라인 1 + defer 4")
 
     def test_header_has_tabs_github_rss_toggle_and_no_real_name(self):
         h = self.read("_includes/header.html")
@@ -188,6 +192,7 @@ class IncludesAndDefaultLayout(unittest.TestCase):
             self.assertIn(s, h, s)
         self.assertIn('class="mhd mobile-only"', h)
         self.assertIn('class="mtabs mobile-only"', h)
+        self.assertEqual(h.count("relative_url }}\">글</a>"), 2, "「글」 탭은 데스크톱·모바일 양쪽에")
 
     def test_post_row_contract(self):
         r = self.read("_includes/post-row.html")
@@ -200,6 +205,8 @@ class IncludesAndDefaultLayout(unittest.TestCase):
         self.assertIn("where_exp", s)
         self.assertIn('class="sb desktop-only"', s)
         self.assertIn('class="strip mobile-only"', s)
+        self.assertIn("<details>", s, "모바일 스택 맵은 한 줄로 접힌 details — 가로 스크롤 칩 스트립 아님")
+        self.assertNotIn("overflow-x", s)
         self.assertIn("active contains", s)
         self.assertIn("rendered", s, "연결선은 실제로 렌더된 그룹 사이에만 — rendered 카운터")
         self.assertIn("base_done", s, "기반 그룹만 있을 때는 연결선 자체를 생략 — base_done 플래그")
@@ -209,7 +216,9 @@ class IncludesAndDefaultLayout(unittest.TestCase):
         self.assertIn('include.part == "desktop"', f)
         self.assertIn('include.part == "mobile"', f)
         self.assertIn('name="kind"', f)
+        self.assertIn("tech.size > 0", f, "종류가 하나뿐인 목록(인사이트)에는 필터를 내지 않는다")
         t = self.read("_includes/quicknav-toc.html")
+        self.assertIn("개 절", t, "모바일 목차 카드 요약은 절 수만 — 절 제목을 나열하면 카드가 깨진다")
         self.assertIn("'<h2 '", t)
         self.assertIn("strip_html", t)
         self.assertIn("entries.size > 0", t, "<h2 id> 이 없으면 목차 자체를 렌더하지 않는다")
@@ -243,7 +252,8 @@ class ListPages(unittest.TestCase):
         self.assertTrue(l.startswith("---\nlayout: default\n---"))
         for s in ["site.tech | concat: site.insights | sort: \"date\" | reverse", "page.posts_filter", "page.stack",
                   "sidebar-stacks.html active=", "post-row.html post=", 'quicknav-filter.html posts=posts part="mobile"',
-                  'quicknav-filter.html posts=posts part="desktop"', 'class="layout"', 'class="rows"', 'class="empty" hidden']:
+                  'quicknav-filter.html posts=posts part="desktop"', 'class="layout"', 'class="rows"', 'class="empty" hidden',
+                  'class="ysep"', 'data-more']:
             self.assertIn(s, l, s)
 
     def test_stack_layout_wraps_list(self):

@@ -57,17 +57,21 @@ class JekyllBuild(unittest.TestCase):
 
     def test_filter_counts_on_tech_list(self):
         t = self.read("tech/index.html")
-        self.assertIn("전체<i>2</i>", t)
+        self.assertEqual(t.count("전체<i>2</i>"), 2, "데스크톱 라디오와 모바일 세그먼트 모두 수를 보여준다")
         self.assertIn("설계<i>1</i>", t)
         self.assertIn("문제 해결<i>1</i>", t)
         self.assertNotIn("인사이트만", t)
+        self.assertNotIn('name="kind"', self.read("insights/index.html"), "인사이트 목록은 종류가 하나 — 필터 없음")
+        self.assertIn('<div class="ysep">2026</div>', self.read("index.html"))
+        self.assertIn('data-more', self.read("index.html"))
         self.assertNotIn('<span class="tp">tech</span>', t)
 
     def test_post_page_toc_meta_prev_next_and_callout(self):
         p = self.read("tech/sample-sigv4-403/index.html")
         for s in ['href="#situation"', ">어디서, 무엇을 하다가</a>", 'href="#root-cause"', '<h2 id="situation" data-k="SITUATION">',
                   '<div class="callout">', "<strong>재발 방지</strong>", "이전 · kong", "Kong 3종 관문 분리 설계",
-                  'href="/explain/sample-sigv4.html"', '<b>문제 해결</b>', '<a class="badge outline" href="/stack/aws-iam/">']:
+                  'href="/explain/sample-sigv4.html"', '<b>문제 해결</b>', '<a class="badge outline" href="/stack/aws-iam/">',
+                  "<i>4개 절</i>", "/assets/article.js"]:
             with self.subTest(s=s):
                 self.assertIn(s, p)
         self.assertNotIn("다음 · kong", p, "최신 글이므로 다음 없음")
@@ -92,6 +96,8 @@ class JekyllBuild(unittest.TestCase):
     def test_stack_page_and_about(self):
         k = self.read("stack/kong/index.html")
         self.assertIn("Kong<small>2</small>", k)
+        self.assertIn("<b>Kong</b><i>2</i>", k, "모바일 스택 맵 요약줄이 현재 스택을 crumb 으로 보여준다")
+        self.assertIn("개 스택 · ", self.read("index.html"))
         self.assertIn('<span class="tp">tech</span>', k)
         a = self.read("about/index.html")
         for u in ["/tech/", "/insights/", "/feed.xml"]:

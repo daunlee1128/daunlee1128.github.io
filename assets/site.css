@@ -20,7 +20,7 @@ html.dark [data-theme-toggle] .icon-sun{display:block}
 html.dark [data-theme-toggle] .icon-moon{display:none}
 /* sidebar */
 .sb{width:250px;flex:0 0 auto;padding:var(--sp-5) var(--sp-4) var(--sp-5) var(--sp-5);border-right:1px solid var(--gray-6);background:var(--color-background);position:sticky;top:56px;align-self:flex-start;height:calc(100vh - 56px);overflow-y:auto;overscroll-behavior:contain}
-.sb .cap{margin:0 0 var(--sp-3);padding:0 var(--sp-2);color:var(--gray-11);font-size:var(--fs-1);line-height:var(--lh-1);font-weight:500}
+.sb .cap{margin:0 0 var(--sp-3);padding:0 var(--sp-2);color:var(--gray-11);font-size:var(--fs-1);line-height:var(--lh-1);font-weight:500;white-space:nowrap}
 .sb .g{margin-bottom:var(--sp-2)}
 .sb .gt{display:flex;justify-content:space-between;align-items:center;padding:6px var(--sp-2);color:var(--gray-12);font-size:var(--fs-1);line-height:var(--lh-1);font-weight:700}
 .sb .gt i{font-style:normal;color:var(--gray-10);font-family:var(--mono);font-weight:400}
@@ -57,6 +57,16 @@ h1.t small{margin-left:var(--sp-2);font-size:var(--fs-3);font-weight:400;color:v
 .badge.outline{box-shadow:inset 0 0 0 1px var(--gray-7);color:var(--gray-11);font-family:var(--mono)}
 .rows{display:flex;flex-direction:column;margin-top:var(--sp-4);border-top:1px solid var(--gray-6)}
 .row{display:block;padding:var(--sp-4) 0;border-bottom:1px solid var(--gray-6)}
+.row:hover{background:var(--gray-2);margin:0 calc(-1 * var(--sp-4));padding-left:var(--sp-4);padding-right:var(--sp-4)}
+.row:hover b{color:var(--accent-11)}
+/* 연도 구분 · 더 보기 — 목록은 전부 내보내고 filter.js 가 20편씩 드러낸다 */
+.ysep{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3) 0 var(--sp-1);font-family:var(--mono);font-size:var(--fs-1);color:var(--gray-10)}
+.ysep::after{content:"";flex:1;height:1px;background:var(--gray-6)}
+.ysep[hidden]{display:none}
+.more-btn{display:flex;align-items:center;justify-content:center;gap:var(--sp-2);width:100%;height:40px;margin-top:var(--sp-4);border-radius:var(--r-3);border:1px solid var(--gray-7);background:var(--color-panel);color:var(--gray-12);font-family:inherit;font-size:var(--fs-2);font-weight:500;cursor:pointer}
+.more-btn:hover{background:var(--gray-2)}
+.more-btn i{font-style:normal;font-family:var(--mono);font-size:var(--fs-1);color:var(--gray-10)}
+.more-btn[hidden]{display:none}
 .row[hidden]{display:none}
 .row .top{display:flex;align-items:center;gap:var(--sp-2);margin-bottom:6px}
 .row .top .tp{color:var(--gray-10);font-size:var(--fs-1);font-family:var(--mono)}
@@ -72,13 +82,16 @@ h1.t small{margin-left:var(--sp-2);font-size:var(--fs-3);font-weight:400;color:v
 .dl dd.stk{display:flex;gap:6px;flex-wrap:wrap}
 .dl dd.mono{font-family:var(--mono)}
 .dl dd a{color:var(--accent-11);font-weight:500}
+.dl dd a small{color:var(--gray-11);font-weight:400;font-size:var(--fs-2);margin-left:var(--sp-2)}
 .crumb{display:flex;gap:var(--sp-2);color:var(--gray-11);font-size:var(--fs-2)}
 .crumb b{color:var(--gray-12);font-weight:500}
 /* article */
 .art h1{margin:var(--sp-3) 0 0;font-size:var(--fs-8);line-height:var(--lh-8);font-weight:700;letter-spacing:-.01em}
 .art h2{display:flex;align-items:baseline;gap:var(--sp-3);margin:var(--sp-7) 0 0;font-size:var(--fs-6);line-height:var(--lh-6);font-weight:700;letter-spacing:-.00625em;scroll-margin-top:72px}
+.art h1 .tag{font-size:var(--fs-3);font-weight:400;color:var(--gray-10);font-family:var(--mono);letter-spacing:0}
 .art h2[data-k]::before{content:attr(data-k);font-family:var(--mono);font-size:var(--fs-1);font-weight:500;color:var(--accent-11);letter-spacing:.02em}
 .art h3{margin:var(--sp-5) 0 0;font-size:var(--fs-4);line-height:var(--lh-4);font-weight:700;scroll-margin-top:72px}
+.art{overflow-wrap:break-word}
 .art p,.art ul,.art ol{margin:var(--sp-3) 0 0;font-size:var(--fs-3);line-height:var(--lh-3)}
 .art li{margin-top:var(--sp-1)}
 .art a{color:var(--accent-11);text-decoration:underline;text-decoration-color:var(--accent-6);text-underline-offset:2px}
@@ -86,9 +99,10 @@ h1.t small{margin-left:var(--sp-2);font-size:var(--fs-3);font-weight:400;color:v
 .art code{font-family:var(--mono);font-size:.9em;padding:1px 4px;border-radius:var(--r-2);background:var(--gray-3);color:var(--gray-12)}
 .art pre{margin:var(--sp-3) 0 0;padding:var(--sp-3) var(--sp-4);border-radius:var(--r-3);background:var(--gray-2);box-shadow:inset 0 0 0 1px var(--gray-6);font-family:var(--mono);font-size:13px;line-height:20px;color:var(--gray-12);overflow-x:auto}
 .art pre code{padding:0;background:none;font-size:inherit}
-.art table{border-collapse:collapse;margin:var(--sp-3) 0 0;font-size:var(--fs-2);display:block;overflow-x:auto}
-.art th,.art td{border:1px solid var(--gray-6);padding:6px 10px;text-align:left;vertical-align:top}
-.art th{background:var(--gray-2);white-space:nowrap}
+/* 표 — 화면 안에 맞춘다(가로 스크롤 없음). 열 4개 이상은 모바일에서 article.js 가 .stack 을 붙여 행을 카드로 세운다 */
+.art table{border-collapse:collapse;width:100%;margin:var(--sp-3) 0 0;font-size:var(--fs-2)}
+.art th,.art td{border:1px solid var(--gray-6);padding:6px 10px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+.art th{background:var(--gray-2)}
 .art blockquote{margin:var(--sp-3) 0 0;padding:0 var(--sp-4);border-left:2px solid var(--gray-6);color:var(--gray-11)}
 .art hr{border:0;border-top:1px solid var(--gray-6);margin:var(--sp-6) 0 0}
 .callout{display:flex;gap:var(--sp-3);margin:var(--sp-5) 0 0;padding:var(--sp-3) var(--sp-4);border-radius:var(--r-3);background:var(--accent-3);color:var(--accent-11)}
@@ -97,11 +111,19 @@ h1.t small{margin-left:var(--sp-2);font-size:var(--fs-3);font-weight:400;color:v
 .callout p{margin:0;font-size:var(--fs-2);line-height:var(--lh-2);color:var(--accent-12)}
 .callout strong{color:var(--accent-11)}
 /* 다이어그램 — mermaid 렌더 결과 · 인라인 SVG(.fig) · 그림 캡션. 붙이는 규약은 blog-draft references/visuals.md */
-.art .mermaid{margin:var(--sp-5) 0 0;overflow-x:auto;border:1px solid var(--gray-6);border-radius:var(--r-3);background:var(--gray-1);padding:var(--sp-4)}
+.art .mermaid{margin:var(--sp-5) 0 0;overflow:hidden;border:1px solid var(--gray-6);border-radius:var(--r-3);background:var(--gray-1);padding:var(--sp-4)}
 .art .mermaid svg{display:block;margin:0 auto;height:auto}
 .art .fig{margin:var(--sp-5) 0 0}
-.art .fig-scroll{overflow-x:auto;border:1px solid var(--gray-6);border-radius:var(--r-3);background:var(--gray-1);padding:var(--sp-4) var(--sp-4) var(--sp-2)}
-.art .fig svg{display:block;width:100%;min-width:560px;height:auto;color:var(--gray-11)}
+.art .fig-scroll{overflow:hidden;border:1px solid var(--gray-6);border-radius:var(--r-3);background:var(--gray-1);padding:var(--sp-4) var(--sp-4) var(--sp-2)}
+.art .fig-scroll>svg{display:block;width:100%;height:auto;color:var(--gray-11)}
+/* 그림은 폭에 맞춰 축소하고, 「크게」로 원래 크기를 전체 화면에 연다(article.js) */
+.zoomwrap{position:relative;margin:var(--sp-5) 0 0}.zoomwrap>.mermaid,.zoomwrap>.fig-scroll{margin-top:0}
+.zoom{position:absolute;top:var(--sp-2);right:var(--sp-2);display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 var(--sp-2);border-radius:var(--r-2);border:1px solid var(--gray-7);background:var(--color-panel);color:var(--gray-11);font-family:inherit;font-size:var(--fs-1);font-weight:500;cursor:pointer;white-space:nowrap}
+.zoom svg{width:14px;height:14px}
+.zoomdlg{width:100vw;height:100vh;max-width:none;max-height:none;margin:0;padding:var(--sp-8) var(--sp-4) var(--sp-4);border:0;background:var(--gray-1);color:var(--gray-11);overflow:auto}
+.zoomdlg::backdrop{background:rgba(0,0,0,.4)}
+.zoomdlg .zoom{position:fixed;top:var(--sp-3);right:var(--sp-3)}
+.zoomdlg svg{display:block;height:auto;margin:0 auto}
 .art figcaption,.art p.figcap{margin:var(--sp-2) 0 0;font-size:var(--fs-2);line-height:var(--lh-2);color:var(--gray-11)}
 .art p.figcap em{font-style:normal}
 /* 인라인 SVG 클래스 계약 — 글은 좌표와 구조만 쓰고 색·굵기·글꼴은 전부 여기서 온다(다크모드 자동) */
@@ -124,6 +146,7 @@ h1.t small{margin-left:var(--sp-2);font-size:var(--fs-3);font-weight:400;color:v
 .pn a{padding:var(--sp-3) var(--sp-4);border-radius:var(--r-3);box-shadow:var(--shadow-2);background:var(--color-panel);font-size:var(--fs-2)}
 .pn a small{display:block;color:var(--gray-11);font-size:var(--fs-1);margin-bottom:2px}
 .pn a.next{text-align:right;grid-column:2}
+.dl dd.stk{display:flex;gap:6px;flex-wrap:wrap}
 .ct .seg{margin-left:0;margin-right:0}
 .ct.solo{margin:0 auto}
 /* explain card (mobile 글 상단 · page 레이아웃) */
@@ -135,24 +158,33 @@ h1.t small{margin-left:var(--sp-2);font-size:var(--fs-3);font-weight:400;color:v
 .mtabs{display:flex;gap:var(--sp-1);padding:0 var(--sp-3);border-bottom:1px solid var(--gray-6)}
 .mtabs a{padding:10px var(--sp-2);color:var(--gray-11);font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px}
 .mtabs a.on{color:var(--gray-12);border-bottom-color:var(--accent-9)}
-.strip{padding:var(--sp-3) 0 0 var(--sp-4);border-bottom:1px solid var(--gray-6)}
-.strip .cap{display:flex;justify-content:space-between;align-items:center;padding-right:var(--sp-4);color:var(--gray-11);font-size:var(--fs-1);font-weight:500}
-.strip .cap a{color:var(--accent-11)}
-.chips{display:flex;gap:6px;overflow-x:auto;padding:var(--sp-2) var(--sp-4) var(--sp-3) 0;white-space:nowrap}
-.chips a{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:var(--r-2);box-shadow:inset 0 0 0 1px var(--gray-7);font-size:var(--fs-2);flex:0 0 auto}
+/* 모바일 스택 맵 — 기본은 한 줄로 접힌 details, 펼치면 그룹별 칩(줄바꿈). 가로 스크롤 없음 */
+.strip{padding:0 var(--sp-4);border-bottom:1px solid var(--gray-6)}
+.strip summary{display:flex;align-items:center;gap:var(--sp-2);min-height:44px;list-style:none;cursor:pointer;font-size:var(--fs-2);font-weight:500;color:var(--gray-12)}
+.strip summary::-webkit-details-marker{display:none}
+.strip summary i,.strip .gt i{font-style:normal;font-family:var(--mono);font-size:var(--fs-1);font-weight:400;color:var(--gray-10)}
+.strip summary .sep{color:var(--gray-8);font-weight:400}
+.strip summary .arr{margin-left:auto;color:var(--gray-10);font-size:var(--fs-1);font-weight:400}
+.strip summary .arr .o,.strip details[open] summary .arr .c{display:none}
+.strip details[open] summary .arr .o{display:inline}
+.strip .groups{padding:0 0 var(--sp-3)}
+.strip .gt{display:flex;justify-content:space-between;font-size:var(--fs-1);line-height:var(--lh-1);font-weight:700;margin:var(--sp-2) 0 4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 var(--sp-2)}
+.chips a{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:var(--r-2);box-shadow:inset 0 0 0 1px var(--gray-7);font-size:var(--fs-2)}
 .chips a i{font-style:normal;font-family:var(--mono);font-size:var(--fs-1);color:var(--gray-10)}
 .chips a.on{background:var(--accent-3);color:var(--accent-11);box-shadow:inset 0 0 0 1px var(--accent-8)}
-.strip details summary{list-style:none;cursor:pointer} .strip details summary::-webkit-details-marker{display:none}
-.strip details .groups{padding:0 var(--sp-4) var(--sp-3) 0}
-.strip details .groups .gt{font-size:var(--fs-1);font-weight:700;margin:var(--sp-2) 0 4px}
 .seg{display:flex;padding:2px;margin:var(--sp-3) var(--sp-4) 0;border-radius:var(--r-3);background:var(--gray-3);overflow-x:auto}
 .seg label{flex:1 0 auto;text-align:center;padding:5px 9px;border-radius:var(--r-2);font-size:var(--fs-1);color:var(--gray-11);white-space:nowrap;cursor:pointer}
+.seg label i{font-style:normal;font-family:var(--mono);color:var(--gray-10);margin-left:4px}
 .seg input{position:absolute;opacity:0;width:0;height:0}
 .seg label:has(input:checked){background:var(--color-panel);color:var(--gray-12);font-weight:500;box-shadow:var(--shadow-2)}
 .toc-card{margin-top:var(--sp-4);padding:var(--sp-2) var(--sp-3);font-size:var(--fs-2)}
 .toc-card summary{display:flex;justify-content:space-between;align-items:center;cursor:pointer;list-style:none}
 .toc-card summary::-webkit-details-marker{display:none}
-.toc-card summary b{font-weight:500} .toc-card summary span{color:var(--gray-11)}
+.toc-card summary b{flex:0 0 auto;white-space:nowrap;font-weight:600}
+.toc-card summary span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:var(--gray-11)}
+.toc-card summary span i{font-style:normal;font-family:var(--mono);font-size:var(--fs-1);color:var(--gray-10)}
+.toc-card .toc{padding-top:var(--sp-2);border-top:1px solid var(--gray-5)}
 .toc-card .toc{margin-top:var(--sp-2)}
 /* responsive: ≥769 데스크톱 3단 · ≤768 모바일. *-only 는 display 값을 강제하지 않고(각 요소의 flex/block 유지) 반대 폭에서만 숨긴다 */
 @media (min-width:769px){ .mobile-only{display:none !important} }
@@ -163,12 +195,23 @@ h1.t small{margin-left:var(--sp-2);font-size:var(--fs-3);font-weight:400;color:v
   .ct{max-width:none;padding:var(--sp-2) var(--sp-4) var(--sp-6)}
   .ct.art{padding-top:var(--sp-5)}
   .art h1{font-size:var(--fs-7);line-height:var(--lh-7)}
+  .art h1 .tag{display:block;font-size:var(--fs-2);line-height:var(--lh-2);margin-top:var(--sp-1)}
+  .art h2{flex-direction:column;align-items:flex-start;gap:2px}
+  .art table{table-layout:fixed;font-size:13px;line-height:18px}
+  .art th,.art td{padding:6px 8px}
+  .art table.stack,.art table.stack tbody,.art table.stack tr,.art table.stack td{display:block;width:100%}
+  .art table.stack thead{display:none}
+  .art table.stack tr{border:1px solid var(--gray-6);border-radius:var(--r-3);padding:4px 0;margin-top:var(--sp-2);background:var(--color-panel)}
+  .art table.stack td{border:0;padding:4px var(--sp-3) 4px 92px;position:relative}
+  .art table.stack td::before{content:attr(data-label);position:absolute;left:var(--sp-3);top:4px;color:var(--gray-10);font-size:var(--fs-1);line-height:18px;font-weight:500}
+  .art table.stack td:first-child{font-weight:600}
+  .row:hover{margin:0;padding-left:0;padding-right:0;background:none}
   .pn{grid-template-columns:1fr} .pn a.next{grid-column:auto;text-align:left}
   .dl{grid-template-columns:72px 1fr}
 }
 /* print: 본문만, 링크 URL 병기 */
 @media print{
-  .hd,.mhd,.mtabs,.strip,.seg,.sb,.qn,.pn,.toc-card,[data-theme-toggle]{display:none !important}
+  .hd,.mhd,.mtabs,.strip,.seg,.sb,.qn,.pn,.toc-card,.more-btn,.zoom,[data-theme-toggle]{display:none !important}
   .layout{display:block} .ct{max-width:none;padding:0}
   body{background:#fff;color:#000;font-size:11pt}
   .art a[href^="http"]::after{content:" (" attr(href) ")";font-size:.85em;color:#555}

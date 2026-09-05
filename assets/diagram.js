@@ -77,11 +77,10 @@
         titleColor: tok('--gray-12'),
         nodeBorder: tok('--gray-11')
       },
-      // 축소되면 글자가 같이 작아진다. 자연 크기로 두고 넘치면 컨테이너가 가로 스크롤한다
-      // — 이 블로그의 표(.art table)·코드(.art pre)와 같은 규칙이다.
-      flowchart: { htmlLabels: false, curve: 'linear', useMaxWidth: false, padding: 8, nodeSpacing: 36, rankSpacing: 40 },
-      sequence: { useMaxWidth: false },
-      gantt: { useMaxWidth: false }
+      // 컨테이너보다 크면 폭에 맞춰 축소한다(가로 스크롤 없음). 원래 크기는 article.js 의 「크게」가 전체 화면에 연다.
+      flowchart: { htmlLabels: false, curve: 'linear', useMaxWidth: true, padding: 8, nodeSpacing: 36, rankSpacing: 40 },
+      sequence: { useMaxWidth: true },
+      gantt: { useMaxWidth: true }
     });
     hosts.forEach(function (h) {
       h.removeAttribute('data-processed');

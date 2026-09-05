@@ -3,6 +3,7 @@
 <header class="hd desktop-only">
   <a class="brand" href="{{ '/' | relative_url }}">{{ site.handle }}<small>{{ site.tagline }}</small></a>
   <nav class="tabs">
+    <a class="{% if page.section == "" or page.section == nil %}on{% endif %}" href="{{ '/' | relative_url }}">글</a>
     <a class="{% if page.section == "tech" %}on{% endif %}" href="{{ '/tech/' | relative_url }}">기술</a>
     <a class="{% if page.section == "insights" %}on{% endif %}" href="{{ '/insights/' | relative_url }}">인사이트</a>
     <a class="{% if page.section == "about" %}on{% endif %}" href="{{ '/about/' | relative_url }}">About</a>

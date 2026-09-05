@@ -20,9 +20,9 @@
 </aside>
 {%- endif -%}
 {%- if include.part == "mobile" -%}
-{%- capture joined -%}{%- for e in entries -%}{%- assign f = e | strip | split: "|" -%}{%- if f[0] != "" -%}{{ f[1] }}{% unless forloop.last %} · {% endunless %}{%- endif -%}{%- endfor -%}{%- endcapture -%}
+{%- assign n = 0 -%}{%- for e in entries -%}{%- assign f = e | strip | split: "|" -%}{%- if f[0] != "" -%}{%- assign n = n | plus: 1 -%}{%- endif -%}{%- endfor -%}
 <details class="card toc-card mobile-only">
-  <summary><b>이 글에서</b><span>{{ joined }} ▾</span></summary>
+  <summary><b>이 글에서</b><span><i>{{ n }}개 절</i>▾</span></summary>
   <div class="toc">
     {%- for e in entries -%}{%- assign f = e | strip | split: "|" -%}{%- if f[0] != "" -%}<a href="#{{ f[0] }}">{{ f[1] }}</a>{%- endif -%}{%- endfor -%}
   </div>

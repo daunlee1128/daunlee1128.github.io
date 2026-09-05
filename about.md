@@ -6,7 +6,7 @@ permalink: /about/
 ---
 
 <div class="crumb"><span>About</span></div>
-<h1>{{ site.handle }} <small style="font-size:var(--fs-3);font-weight:400;color:var(--gray-10);font-family:var(--mono)">{{ site.tagline }}</small></h1>
+<h1>{{ site.handle }} <small class="tag">{{ site.tagline }}</small></h1>
 
 만들고 운영하며 남긴 기록입니다. 한 번 겪고 흘려보내면 다음에 같은 자리에서 또 멈추는 것들 — 설계에서 기각한 대안, 설정과 구현의 세부, 운영 중 겪은 문제 해결 경험과 그 근본 원인 — 을 다시 꺼내 쓸 수 있는 형태로 적어 둡니다.
 

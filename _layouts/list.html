@@ -21,8 +21,14 @@ layout: default
   {%- elsif page.lead -%}<p class="lead">{{ page.lead }}</p>{%- endif -%}
   {% include quicknav-filter.html posts=posts part="mobile" %}
   <div class="rows">
-    {%- for p in posts -%}{% include post-row.html post=p show_type=show_type %}{%- endfor -%}
+    {%- assign year = "" -%}
+    {%- for p in posts -%}
+      {%- assign y = p.date | date: "%Y" -%}
+      {%- if y != year -%}<div class="ysep">{{ y }}</div>{%- assign year = y -%}{%- endif -%}
+      {% include post-row.html post=p show_type=show_type %}
+    {%- endfor -%}
   </div>
+  <button class="more-btn" type="button" data-more hidden>더 보기<i></i></button>
   <p class="empty" hidden>이 종류의 글이 아직 없습니다.</p>
   {%- if posts.size == 0 -%}<p class="empty">아직 글이 없습니다.</p>{%- endif -%}
 </main>

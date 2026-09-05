@@ -13,7 +13,7 @@ explain/               글에 딸린 self-contained HTML. front matter 없이 �
 _data/stacks.yml       스택 원장 — 사이드바 스택 맵의 유일한 출처
 _data/kinds.yml        tech 하위 구분(design·config·impl·ops·troubleshooting)과 배지 색
 _layouts/ _includes/   default·list·page·post·stack 레이아웃, 헤더·사이드바·목차·글줄
-assets/                tokens.css(Radix 색 앵커) · site.css · theme.js(다크) · filter.js(종류 필터)
+assets/                tokens.css(Radix 색 앵커) · site.css · theme.js(다크) · filter.js(종류 필터·더 보기) · article.js(표 카드화·그림 크게·목차 현재 절)
 scripts/               check-publish.sh · dev-build.sh · gen-stack-stubs.py · tests/
 .githooks/pre-push     push 전 유출 검사
 .denylist              로컬 전용 검사 패턴(gitignore). 없으면 push 가 거부된다

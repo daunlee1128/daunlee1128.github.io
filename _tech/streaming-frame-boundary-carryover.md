@@ -1,153 +1,172 @@
 ---
 type: tech
 kind: troubleshooting
-title: 긴 응답만 스트리밍 중간에 끊긴다 — 원인은 프레임 경계 carry-over 누락
+title: "Kong 뒤 Bedrock 스트리밍에서 긴 응답만 중간에 끊긴다"
 date: 2026-09-07
 stack: [kong, bedrock]
-summary: Kong 뒤에서 Bedrock 스트리밍을 부르면 긴 응답만 중간에 끊겼다. 원인은 TCP 청크와 eventstream 프레임 경계가 어긋날 때 남은 바이트를 다음 청크로 넘기지 않은 것이었다.
+summary: "carry-over 패치는 원복했다. 실제 조치는 동기 Converse 우회였다."
 ---
 
-사내 LLM 게이트웨이(Kong) 뒤에서 Bedrock 을 스트리밍으로 부르는데 긴 응답만 중간에 끊겼다.
-응답 파서의 AWS eventstream 분기에만 carry-over 버퍼가 없어, 청크 끝이 프레임 경계와 어긋나면
-꼬리가 버려졌다. 응답 크기 말고 절단점의 위치를 보는 순서를 적는다.
+응답 크기 대신 절단점 위치를 변수로 놓고 파서의 응답 분기끼리 대조했다.
+Bedrock `ConverseStream`의 긴 출력은 Kong 뒤에서 도중에 닫혔다.
+carry-over 패치는 원복했다.
+실제 조치는 동기 `Converse` 우회였다.
 
-{: #situation data-k="SITUATION"}
-## 어디서, 무엇을 하다가
+독자는 Kong으로 Bedrock 스트리밍 응답을 파싱해 내보내는 사람이다.
+답은 [“스트리밍 경로를 동기 Converse 호출로 우회했다” 절](#sync-converse-bypass)에 있다.
 
-AI 게이트웨이를 사내에 두는 조직이다. 서비스가 모델을 직접 부르지 않고, 인증·연결·관측을
-게이트웨이 한 경계로 모았다.
+바로 할 것:
 
-```mermaid
-flowchart TD
-  A[사내 에이전트] --> G["LLM Gateway (Kong)"]
-  G -->|SigV4 서명 부착| B["Amazon Bedrock"]
-  B -->|eventstream 청크| G
-  G -->|SSE 스트림| A
-```
+1. 마지막 SSE event와 Gateway 오류를 같은 요청에서 모은다.
+2. Kong version과 AWS eventstream parser 구현을 확인한다.
+3. 청크 하나를 완결된 프레임으로 가정하는지 source에서 본다.
+4. 해당 version의 수정 release가 있는지 공식 changelog를 확인한다.
+5. upgrade가 막히면 동기 `Converse` 경로로 우회한다.
 
-*응답은 게이트웨이 안에서 한 번 파싱된 뒤 다시 조립돼 나간다 — 절단은 모델도 클라이언트도 아닌 그 중간에서 생길 수 있다.*
+{: #streaming-symptom }
+## 스트리밍 route를 만든 뒤 긴 응답이 닫혔다
 
-스트리밍 route 를 구성한 직후부터 보였다.
+2026-07-13에 legacy 스트리밍 route를 만들었다.
+07-23에 현재 경로로 나눴고, 08-04와 08-12에 route를 하나씩 더했다.
 
-{: #symptom data-k="SYMPTOM"}
-## 보이는 것
+[미확인: STREAM-2 · 최초 발견자와 발견 경로]
 
-- 짧은 응답은 끝까지 정상으로 왔다.
-- 긴 출력에서 응답이 중간에 끊기고 스트림이 닫혔다.
-- 같은 요청을 단발로 다시 보내면 재현되지 않았다.
-- 부하를 주며 반복 호출해야 재현됐다.
+짧은 응답은 끝까지 왔다는 기록이 남아 있다.
+긴 출력에서는 Lua `body_filter`가 실패하고 chunked 응답이 무너졌다.
 
-단발 재시도가 매번 성공한 탓에 처음에는 일시적 네트워크 문제로 봤다. 재현 조건을 "부하를 준 반복
-호출" 로 좁히고 나서야 이 증상에 규칙이 있다는 걸 인정했다.
+[미확인: STREAM-1 · 마지막 SSE event나 로그 원문, 재현 부하 규모, 끊긴 비율]
 
-{: #diagnosis data-k="DIAGNOSIS"}
-## 가설 → 확인
+<details markdown="1">
+<summary>parser 오류를 대조할 사람이 펼치기: 기록에 남은 두 nil 지점</summary>
 
-| 가설 | 확인 방법 | 판정 |
-|---|---|---|
-| 일시적 네트워크 문제 | 같은 요청을 단발로 재시도 | 기각 — 부하를 주면 매번 났다. 조건이 있으면 일시적 장애가 아니다 |
-| 응답이 길어 어떤 상한에 걸린다 | 짧은 응답과 긴 응답을 갈라 호출 | 보류 — 상관은 보였지만 걸리는 상한 값이 나오지 않았다 |
-| 게이트웨이 파서의 nil 체크 누락 | 게이트웨이 소스 감사 | 증상으로 재분류 — nil 이 들어온다는 것 자체가 결과였다 |
-| 청크 경계가 프레임 경계와 어긋난다 | 같은 함수의 응답 분기 셋에서 carry-over 처리를 대조 | 확인 — eventstream 분기에만 없었다 |
+- `count` 산술 연산에서 nil 오류
+- nil 값을 함수처럼 호출한 오류
 
-기각한 가설 둘을 남겨 둔다. 특히 두 번째는 오래 붙잡고 있었다. 크기와 상관이 보이면 상한을 찾게
-되는데, 이 문제에는 상한이 없었다.
+</details>
 
-소스를 감사해 원인 1건과 증상 4건을 갈랐다. 결정적인 건 같은 함수 안의 분기 대조였다.
+{: #parser-assumption }
+## Kong 3.9.3 파서는 완결된 AWS 프레임을 가정했다
 
-| 응답 분기 | 언제 추가됐나 | 잘린 꼬리를 다음 청크에 이어 붙이나 |
-|---|---|---|
-| 표준 SSE | 먼저 | 있다 |
-| Gemini | 먼저 | 있다 |
-| AWS eventstream | 나중 | **없다** |
+이 경로는 Kong OSS 3.9.3의 내장 Lua/LuaJIT parser를 썼다.
+Bedrock API는 `ConverseStream`이고 응답은 SSE로 다시 조립했다.
 
-먼저 만들어진 분기가 사고를 겪고 얻은 방어 로직이, 나중에 붙은 분기로 상속되지 않았다.
-방어 로직은 코드 단위가 아니라 분기 단위로 늙는다.
+parser 생성자 주석은 입력을 완결된 AWS response stream chunk라고 적었다.
+16바이트보다 짧은 입력만 거절했고 프레임 중간 절단은 지키지 못했다.
 
-{: #root-cause data-k="ROOT CAUSE"}
-## 경계를 정하는 주체가 둘이다
+<details markdown="1">
+<summary>프레임 레이아웃을 대조할 사람이 펼치기: 길이 필드와 CRC 위치</summary>
 
-AWS eventstream 은 길이 필드로 프레임을 자른다. 프레임의 첫 4바이트가 그 프레임의 전체 길이다.
+2026-09-12에 [Smithy Amazon Event Stream 규격][s]을 확인했다.
+message는 prelude와 data로 나뉜다.
+prelude에는 전체 길이 4바이트와 header 길이 4바이트가 있다.
+각 부분 뒤에는 CRC32 4바이트가 붙어 고정 overhead는 16바이트다.
+수신자는 이 필드 구조와 payload 길이 식으로 message 경계를 복원한다.
 
 ```text
-[ total byte-length : 4B ][ headers byte-length : 4B ][ prelude CRC : 4B ]
-[ headers ... ][ payload ... ][ message CRC : 4B ]
+[ total length: 4B ][ headers length: 4B ][ prelude CRC: 4B ]
+[ headers ... ][ payload ... ][ message CRC: 4B ]
 ```
 
-이 값을 다 채우기 전에는 프레임 하나가 끝나지 않는다. 그런데 TCP 는 메시지 경계를 보존하지 않는다.
-네트워크가 청크를 어디서 끊을지는 이 길이 필드와 아무 관계가 없다.
+HTTP 청크가 어디서 끝나는지는 이 message 길이와 별개다.
+청크 끝이 프레임 중간이면 다음 호출까지 꼬리를 보관해야 한다.
 
-<figure class="fig">
-<div class="fig-scroll">
-<svg viewBox="0 0 620 168" role="img" aria-label="TCP 청크의 끝이 길이 필드가 정한 프레임 경계와 어긋나, 청크 하나가 프레임 중간에서 끝난다">
-  <text class="d-band" x="8" y="16">① 길이 필드가 정하는 프레임 경계</text>
-  <rect class="d-box" x="8"   y="26" width="196" height="38" rx="2"/>
-  <rect class="d-box" x="208" y="26" width="196" height="38" rx="2"/>
-  <rect class="d-box" x="408" y="26" width="196" height="38" rx="2"/>
-  <text class="d-t" x="106" y="50" text-anchor="middle">프레임 A</text>
-  <text class="d-t" x="306" y="50" text-anchor="middle">프레임 B</text>
-  <text class="d-t" x="506" y="50" text-anchor="middle">프레임 C</text>
+</details>
 
-  <text class="d-lbl d-em" x="8" y="88">청크 1 은 프레임 A 한가운데서 끝난다 — 이 꼬리를 들고 있어야 한다</text>
+같은 함수의 표준 SSE와 Gemini 분기는 잘린 꼬리를 보관했다.
+나중에 붙은 AWS eventstream 분기만 그 처리가 없었다.
 
-  <text class="d-band" x="8" y="112">② TCP 가 끊어 주는 청크 경계</text>
-  <rect class="d-box d-alt" x="8"   y="122" width="140" height="38" rx="2"/>
-  <rect class="d-box d-alt" x="152" y="122" width="200" height="38" rx="2"/>
-  <rect class="d-box d-alt" x="356" y="122" width="248" height="38" rx="2"/>
-  <text class="d-t2" x="78"  y="146" text-anchor="middle">청크 1</text>
-  <text class="d-t2" x="252" y="146" text-anchor="middle">청크 2</text>
-  <text class="d-t2" x="480" y="146" text-anchor="middle">청크 3</text>
+<details markdown="1">
+<summary>분기와 공식 문서를 대조할 사람이 펼치기: 꼬리 처리와 정렬 설정</summary>
 
-  <line class="d-l d-dash d-em" x1="148" y1="26" x2="148" y2="160"/>
-  <line class="d-l d-dash d-em" x1="352" y1="26" x2="352" y2="160"/>
-</svg>
-</div>
-<figcaption>경계를 정하는 주체가 둘이라 어긋남은 예외가 아니라 기본값이다 — 짧은 응답이 성공한 건 우연히 정렬됐을 때뿐이고, 정렬을 보장하는 설정은 없었다.</figcaption>
-</figure>
+| 응답 분기 | 잘린 꼬리를 |
+|---|---|
+| 표준 SSE | 다음 청크에 이어 붙임 |
+| Gemini | 다음 청크에 이어 붙임 |
+| AWS eventstream | 버림 |
 
-변수는 응답 크기가 아니라 **절단점의 위치**였다. 크기는 절단점 개수를 늘려 어긋날 기회를 늘렸을 뿐이다.
-그래서 부하를 줘야 재현됐다. 절단점이 흩어져야 어긋난 자리가 나온다.
+이 파서에서는 방어 로직이 분기마다 따로 관리됐다.
+코드 구조는 프레임 절단이 nil 오류로 이어지는 경로를 설명한다.
 
-{: #fix data-k="FIX"}
-## 바꾼 것
+2026-09-12에 [handler][h]·[Response PDK][p] 등 Kong 공식 문서 11개를 비교했다.
+route entity·large payload·3.9.0 route source와 handler·PDK를 포함했다.
+AI Proxy 개요·reference·Bedrock provider·parser source·두 changelog도 확인했다.
+frame 정렬 설정은 찾지 못했다.
+두 대표 문서는 `body_filter`가 도착한 chunk마다 실행되는 계약을 보여준다.
 
-수리 대상은 하나로 특정됐다. eventstream 분기에 carry-over 버퍼를 두는 것이다.
+</details>
 
-아래는 실제 게이트웨이 소스가 아니라, 세 분기가 공유해야 하는 개념 골격이다. 핵심은 ③ — 프레임이
-덜 왔을 때 버퍼를 **버리지 않고 그대로 두는** 자리다.
+[미확인: STREAM-4 · 부하 유무에 따라 프레임 절단 위치가 달라진 로그]
 
-```python
-buf = b""                       # 지난 청크에서 남은 꼬리
+{: #discarded-carry-over }
+## carry-over 패치는 다음 날 전량 원복됐다
 
-def on_chunk(chunk):
-    global buf
-    buf += chunk                # ① 먼저 이어 붙인다
-    while True:
-        if len(buf) < 4:
-            return              # ② 길이 필드조차 아직 안 왔다
-        total = int.from_bytes(buf[:4], "big")
-        if len(buf) < total:
-            return              # ③ 프레임이 덜 왔다 — 버리지 않는다
-        emit(buf[:total])
-        buf = buf[total:]       # ④ 남은 꼬리가 다음 청크의 앞이 된다
-```
+2026-08-13에 AWS 분기의 미소비 bytes를 잇는 임시 patch를 적용했다.
+다음 날 관련 patch를 모두 제거하고 원본 image로 돌아갔다.
 
-자기 파서에서 볼 곳은 한 줄이다. 청크 핸들러가 호출 사이에 살아남는 버퍼를 들고 있는가,
-아니면 매 호출 지역 변수로 새로 시작하는가. 후자면 이 글의 증상이 아직 안 나왔을 뿐이다.
+따라서 carry-over buffer를 운영의 최종 수리로 쓰면 사실과 어긋난다.
 
-증상 4건을 먼저 고쳤다면 어땠을지도 적어 둔다. nil 체크만 채우면 게이트웨이는 터지지 않는다.
-대신 응답은 그대로 잘린 채 스트림이 정상 종료로 닫힌다. 증상 수리는 이 문제를 더 조용하게 만들 뿐이라고 봤다.
+{: #upgrade-boundary }
+## 수정 release는 있었지만 현재 OSS version에는 없었다
 
-{: #prevention data-k="PREVENTION"}
-## 다시 안 겪으려면
+[Kong AI Proxy changelog][k]에는 두 수정 release가 있다.
 
-수치로 남길 조치가 아니라 다음에 같은 판단을 하려고 세운 기준이다.
+<details markdown="1">
+<summary>upgrade를 검토할 사람이 펼치기: 수정 version과 release date</summary>
 
-| 세운 기준 | 무엇을 막나 | 아직 못 막는 것 |
+| version | release date | 공식 기록 |
 |---|---|---|
-| 간헐적 절단은 크기가 아니라 절단점의 위치를 변수로 놓는다. 부하로 절단점을 흩는 재현부터 만든다 | 단발 재시도가 성공해 "일시적 네트워크" 로 닫히는 오진 | 절단점이 늘 같은 자리에 오는 환경에서는 이 재현도 안 된다 |
-| 응답 파서에 분기를 추가할 때 기존 분기의 방어 로직과 항목별로 대조한다 | 먼저 만들어진 분기의 사고 이력이 새 분기로 상속되지 않는 구조 | 대조는 사람이 한다 — 프레임 조립을 한 곳으로 모으기 전에는 분기가 늘 때마다 다시 벌어진다 |
-| 스트리밍을 켤 때 "메시지 경계를 누가 복원하나" 를 설계 항목으로 적는다 | 동기 호출에서 HTTP 스택이 대신 해 주던 일을 아무도 안 하는 상태 | carry-over 버퍼 자체의 상한. 길이 필드가 손상되면 오지 않을 프레임을 기다리며 버퍼가 자란다 |
+| 3.11.0.2 | 2025-07-28 | incomplete AWS frame parser 수정 |
+| 3.10.0.4 | 2025-08-07 | 같은 수정 backport |
 
-스트리밍은 메시지 경계를 복원할 책임이 HTTP 스택에서 애플리케이션으로 옮겨오는 일이다.
-이 문장을 그대로, 모델 호출을 당분간 동기 방식으로 두는 과도기 표준의 설계 근거로 재사용했다.
+</details>
+
+사건 당시 이 환경은 OSS 3.9.3이었다.
+내가 당시 파악한 제약은 OSS 3.9.3 이후에 Enterprise license가 필요하다는 것이었다.
+이는 공식 license 정책을 확인한 사실이 아니라 작성자 진술이다.
+별도 EE 3.14.0.3 환경은 수정 이후 계열에 해당한다.
+[미확인: STREAM-6 후속 · EE 3.14.0.3 환경으로 실제 이전하지 않은 이유]
+
+{: #sync-converse-bypass }
+## 스트리밍 경로를 동기 Converse 호출로 우회했다
+
+이 글의 조건: Kong OSS 3.9.3, 내장 Lua/LuaJIT parser, Bedrock `ConverseStream`, client 응답 SSE, 재현 부하 미확인.
+이 결론은 한 parser 함수에 응답 분기 셋을 둔 구현에서 확인했다.
+
+임시 carry-over 패치를 유지하지 않고 모델 호출을 동기 `Converse`로 돌렸다.
+이 결정을 모델 호출의 과도기 표준으로 문서화했다.
+streaming response parser를 지나지 않으므로 확인한 crash 경로를 피한다.
+
+[미확인: STREAM-3 · 우회 구현·운영 반영, 같은 부하의 절단 여부]
+[미확인: STREAM-5 · 재현에 사용한 부하 규모]
+
+- 같은 조건에서는 임시 parser patch보다 동기 우회 여부를 먼저 판단한다.
+- streaming이 제품 요구라면 수정 parser를 포함한 version으로 옮긴다.
+
+{: #remaining-cost }
+## 동기 우회는 스트리밍 전달을 포기하는 선택이다
+
+동기 `Converse`는 frame 재조립 crash를 피하지만 token을 도착 즉시 보내지 못한다.
+첫 응답까지 기다리는 시간이 길어질 수 있다.
+
+<details markdown="1">
+<summary>같은 판단을 다시 할 사람이 펼치기: 확인된 선택과 남은 구멍</summary>
+
+| 선택 | 확인한 것 | 남은 구멍 |
+|---|---|---|
+| 정렬 설정 변경 | 설정 전량과 공식 문서 11개 | 해당 항목을 찾지 못함 |
+| 수정 version으로 upgrade | 공식 changelog의 parser 수정 | EE 이전 사유 |
+| 임시 carry-over patch | 적용 다음 날 전량 원복 | 운영 처방에서 제외 |
+| 동기 `Converse` 우회 | crash parser를 지나지 않는 설계 | 구현과 운영 관측 |
+
+</details>
+
+남은 판단은 동기 응답의 대기 비용을 받아들일 수 있는지다.
+그 비용을 받을 수 없으면 EE 이전 조건과 운영 검증부터 채워야 한다.
+
+[s]: https://smithy.io/2.0/aws/amazon-eventstream.html
+
+[k]: https://developer.konghq.com/plugins/ai-proxy/changelog/
+
+[h]: https://developer.konghq.com/custom-plugins/handler.lua/
+
+[p]: https://developer.konghq.com/gateway/pdk/reference/kong.response/

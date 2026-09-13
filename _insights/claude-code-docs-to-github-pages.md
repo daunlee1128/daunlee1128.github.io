@@ -1,107 +1,190 @@
 ---
 type: insights
-title: Claude Code가 만든 md·html을 GitHub Pages에 그대로 올려 봤다
+title: "Claude Code가 만든 md·html을 GitHub Pages에 그대로 올릴 수 있나"
 date: 2026-09-02
 stack: [claude-code, github-pages]
 tags: [사용기]
-summary: 로컬에 md·html은 쌓이는데 블로그는 안 썼다. 옮기는 단계가 귀찮아서였고, GitHub Pages는 그 단계를 요구하지 않았다.
+summary: "웹 에디터에 다시 붙여넣는 일을 줄이려고 로컬 파일을 글 단위로 골랐다. 사흘간 사이트를 세운 뒤, 볼트에서 고른 기술 글 11편을 한 번에 옮겼다."
 ---
 
-기술 블로그를 안 썼다. 쓸 게 없어서가 아니라 옮기는 일이 귀찮아서였다 — 로컬에 md는 계속 쌓이는데, 블로그에 올리려면 에디터를 하나 더 열고 형식을 다시 맞춰야 했다. GitHub Pages는 그 단계를 요구하지 않았다. md에 front matter 여섯 줄을 붙여 디렉터리를 옮기면 그게 발행이다.
+웹 에디터에 다시 붙여넣는 일을 줄이려고 로컬 파일을 글 단위로 골랐다.
+사흘간 사이트를 세운 뒤, 볼트에서 고른 기술 글 11편을 한 번에 옮겼다.
+독자는 그대로 옮겨지는 경계와 무료 호스팅에서 공개되는 범위를 얻는다.
+Claude Code로 md·html을 로컬에 쌓아 두는 사람을 전제로 한다.
+답은 [컬렉션과 front matter를 나눈 절](#files)에 있다.
 
-이 글은 그대로 옮겨지는 것과 그대로는 안 되는 것의 경계, 그리고 무료의 대가로 받아들여야 했던 것을 적는다.
+해 볼 것:
 
-{: #what}
-## 무엇을 세웠나
+1. 올릴 글 하나에 아래 답 절의 front matter를 붙인다.
+2. 공개하면 안 되는 초안 디렉터리를 추적 대상에서 뺀다.
 
-로컬에 쌓이는 산출물을 둘 곳이 필요했다. Claude Code로 일하면 내가 만드는 파일이 사실상 두 종류다 — 스펙·플랜·가이드는 md, 시안과 설명 페이지는 self-contained html. 설계 문서를 모아 둔 디렉터리 하나를 세어 보니 md 8 · html 15 · png 11이었다.
+   ```gitignore
+   # .gitignore
+   drafts/
+   ```
 
-| 이 글의 전제 | 실측값 |
-|---|---|
-| 기간 | 2026-08-30 ~ 09-01, 커밋 27개 |
-| 만든 것 | Jekyll 사이트 1개 — 추적 파일 63개(레이아웃·CSS·유출 검사 스크립트 포함) |
-| 빌드 | GitHub Pages 기본 빌드. CI workflow 없음 |
-| 비용 | 0원 (public repo) |
-| 발행한 글 | 0편 |
+3. 이 repo를 clone했다면 커밋된 유출 검사 훅을 켠다.
 
-마지막 줄이 이 글의 한계다. 구조만 세웠고 아직 글을 올리지 않았다. 그러니 이건 "운영해 보니"가 아니라 "세워 보니"다.
+   ```bash
+   git config core.hooksPath .githooks
+   git config --get core.hooksPath
+   ```
 
-{: #friction}
-## 안 쓰던 이유는 글쓰기가 아니었다
+{: #first-batch}
+## 사이트를 세운 뒤 기술 글 11편을 한 번에 옮겼다
 
-미뤄 온 이유를 하나씩 적어 보니 전부 옮기는 작업이었다.
+설계 문서를 모아 둔 디렉터리 하나에 md 8·html 15·png 11이 있었다.
+옮겨 적는 일 때문에 파일이 쌓여도 블로그는 미뤘다.
 
-| 미룬 이유 | 그게 실제로 요구한 것 | Pages에서는 |
+2026-08-30부터 09-01까지 커밋 28개로 Jekyll 사이트를 세웠다.
+KST 기준 날짜 범위로 git 이력을 다시 센 값이다.
+이 구축 구간의 추적 파일은 레이아웃·CSS·검사 스크립트를 포함해 63개였다.
+09-07에는 볼트에서 고른 기술 글 11편을 `_tech/`로 옮겼다.
+게시 커밋 `20b963c`에 11편이 함께 들어 있다.
+한 편당 걸린 시간은 이 일괄 커밋으로 계산할 수 없다.
+
+설정법을 순서대로 설명하는 글과 달리, 여기서는 파일을 골라 옮긴 범위를 다룬다.
+볼트 전체를 사이트로 바꾸는 작업은 하지 않았다.
+
+<details markdown="1">
+<summary>같은 이유로 블로그를 미뤘다면 펼치기: 파일 이동으로 줄어든 작업</summary>
+
+미룬 이유는 붙여넣기·재업로드·이관처럼 원문을 옮기는 작업이었다.
+
+| 어떤 작업이 걸렸나 | 무엇이 필요했나 | 이 구성에서는 어떻게 했나 |
 |---|---|---|
-| 플랫폼 에디터에 다시 붙여넣어야 한다 | 로컬 md → 웹 에디터 복사 → 형식 다시 맞추기 | md 파일 자체가 글. 복사 단계가 없다 |
-| html 산출물을 올릴 데가 없다 | 캡처해서 이미지로 넣거나 다른 서비스에 따로 올림 | front matter 없는 html은 그대로 복사돼 URL 하나를 받는다 |
-| 관리 도구가 하나 더 는다 | 계정·에디터·배포를 따로 익힘 | git 하나. 게시 = `mv` → commit → push |
-| 나중에 서비스가 바뀌면 | 내보내기·이관 | repo가 원본이다. 생성기를 바꿔도 md는 남는다 |
+| 웹 에디터에 붙여넣기 | 로컬 md 복사와 형식 재정리 | md를 컬렉션에 넣고 공통 레이아웃 적용 |
+| html 산출물 올리기 | 캡처하거나 별도 호스팅 찾기 | front matter 없이 정적 파일로 배치 |
+| 게시 경로 익히기 | 플랫폼 에디터·배포 도구 관리 | 파일 이동, commit, push |
+| 생성기 교체 | 플랫폼에서 원문 내보내기 | repo의 md를 원문으로 유지 |
 
-{: #boundary}
-## 그대로 옮겨지는 것과 아닌 것
+</details>
 
-Jekyll의 판정 기준은 확장자가 아니라 front matter 유무다.
+{: #files}
+## md는 컬렉션에서 글로 처리하고 통짜 html은 정적 파일로 둔다
 
-```mermaid
-flowchart TD
-  F[볼트의 파일] --> E{확장자}
-  E -->|md| A{front matter}
-  E -->|html| B{front matter}
-  A -->|있다| POST[레이아웃 입혀 글로 발행]
-  A -->|없다| COPY[그대로 복사]
-  B -->|있다| LIQ["Liquid 처리 — 이중 중괄호가 변수로 해석된다"]
-  B -->|없다| COPY
+이 글의 조건: Free 플랜 public repo, GitHub Pages 기본 Jekyll 빌드.
+별도 CI workflow는 없다. 로컬은 github-pages 232·Jekyll 3.10.0·kramdown 2.4.0이다.
+버전은 2026-09-12 `Gemfile.lock`으로 확인했다.
+로컬 Gemfile·lock은 GitHub Pages 서버 빌드의 입력이 아니다.
+
+이 repo는 `_posts/` 대신 `_tech/`·`_insights/` 컬렉션을 쓴다.
+아래는 기술 글의 여섯 키를 채운 예다.
+구분선 `---`는 여섯 키에 포함하지 않는다.
+
+```yaml
+---
+type: tech
+kind: config
+title: GitHub Pages 게시 경로를 설정했다
+date: 2026-09-12
+stack: [github-pages]
+summary: 초안과 게시 파일을 디렉터리로 나눴다.
+---
 ```
 
-*front matter가 "글이 되느냐 파일로 남느냐"를 가른다 — 통짜 html은 front matter를 안 붙이는 쪽이 안전하다.*
+insights 글은 `type: insights`로 쓰고 `kind` 대신 `tags`를 둔다.
+front matter만 붙였다고 발행 준비가 끝나는 것은 아니다.
+컬렉션 위치, 링크, 공개해도 되는 내용을 함께 확인한다.
 
-그래서 옮기기 전에 볼트를 세어 봤다. 아래는 로컬 md 볼트 1개를 `find`·`grep`으로 집계한 값이다(2026-09-01, md 457 · html 64).
+통짜 html은 front matter 없이 `explain/`에 둔다.
+Jekyll은 이 파일을 정적 파일로 복사한다.
+front matter를 붙이면 Liquid 처리 대상이 된다.
+이는 [Jekyll front matter](https://jekyllrb.com/docs/front-matter/)와 [정적 파일 규약](https://jekyllrb.com/docs/static-files/)에서 확인했다(2026-09-12).
 
-| 볼트에서 흔한 것 | 개수 | Pages에서 어떻게 되나 | 해야 할 일 |
-|---|---|---|---|
-| front matter 없는 md | 243 / 457 | 글이 아니라 정적 파일로 복사된다 | 여섯 줄 붙이기 |
-| 한글 파일명 | 252 / 457 | 파일명이 곧 URL이라 퍼센트 인코딩된다 | ASCII 슬러그로 새 파일명 |
-| 위키링크 `[[문서]]` | 74 / 457 | kramdown이 링크로 안 바꾼다. 대괄호째 출력 | 상대 경로 링크로 |
-| 이중 중괄호가 든 html | 3 / 64 | front matter를 붙이는 순간 Liquid 변수로 먹힌다 | front matter 없이 두기 |
+<details markdown="1">
+<summary>볼트를 통째로 옮기려면 펼치기: 2026-09-01 집계와 파일별 손질</summary>
 
-네 줄 다 파일 하나씩 손보면 되는 일이고 변환기를 붙일 만한 양은 아니었다. 올릴 글만 골라 옮기니까. 볼트 전체를 미러링할 생각이라면 얘기가 달라진다 — 그건 변환기가 필요하고 변환기가 생기는 순간 "옮기는 단계가 없다"는 이 조합의 유일한 장점이 사라진다.
+로컬 볼트 1개를 `find`·`grep`으로 셌다.
+2026-09-01 기준 md 457개, html 64개였다.
+아래 분모는 발행된 블로그 파일 수가 아니라 이 볼트의 파일 수다.
 
-{: #free-tier}
-## 무료의 조건은 public repo다
+| 볼트에 무엇이 있었나 | 몇 개였나 | 이 repo로 옮길 때 무엇을 하나 |
+|---|---|---|
+| front matter 없는 md | 243 / 457 | 필요한 키를 채우고 컬렉션에 배치 |
+| 한글 파일명 | 252 / 457 | URL로 쓸 ASCII 슬러그 선택 |
+| 이중 중괄호가 든 html | 3 / 64 | 통짜 산출물에는 front matter를 붙이지 않음 |
 
-GitHub Pages는 Free 플랜에서 public repo만 게시한다(2026-08-29 확인). private repo에 Pages를 켜려면 상위 플랜을 요구한다. 글만 공개되는 게 아니라 repo 소스와 커밋 이력이 통째로 공개된다.
+이 집계는 저장된 당시 기록이다. 현재 볼트를 다시 센 값은 아니다.
+파일 하나씩 손보는 방법은 고른 글을 옮기는 범위에서만 썼다.
+전체 자동 미러링에는 별도 변환이 필요하다고 판단한다(추론).
 
-| 무료로 얻은 것 | 대신 받아들인 것 |
-|---|---|
-| 호스팅·빌드·HTTPS 0원 | 초안·설정·커밋 메시지까지 전부 공개 |
-| CI 없이 push하면 반영 | 잘못 커밋한 것은 나중에 지워도 이력에 남는다 |
-| 서버 관리 없음 | 접근 제어가 없다. 비밀번호 보호는 상위 플랜 |
+</details>
 
-그래서 초안 디렉터리를 gitignore하고 push 전 검사를 하나 세웠다. 처음엔 최신 트리만 봤는데, 그러면 잘못 커밋한 파일을 다음 커밋에서 지우고 push하는 경우가 통과해 버린다. 원격 이력에는 그 blob이 그대로 남는데도. 범위 전체를 보도록 고쳤다.
+{: #public}
+## Free 플랜에서는 원문과 커밋 이력까지 공개된다
+
+GitHub Free의 Pages는 public repo를 전제로 한다.
+Pro·Team 등은 private repo에서도 Pages를 호스팅할 수 있다.
+repo의 공개 여부와 사이트의 접근 제어는 별개다.
+[GitHub Pages 플랜 안내](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)를 확인했다(2026-09-12).
+
+사이트 비공개 발행은 Enterprise Cloud 조직의 project site에 제공된다.
+해당 조직이 소유한 private·internal repo 등 추가 조건이 있다.
+이 개인 사이트를 상위 플랜으로 바꾸기만 하면 비공개가 된다는 뜻은 아니다.
+[GitHub Pages 접근 제어 문서](https://docs.github.com/en/enterprise-cloud@latest/pages/getting-started-with-github-pages/changing-the-visibility-of-your-github-pages-site)에 따른 범위다(2026-09-12).
+
+초안 디렉터리는 gitignore하고, push 전 유출 검사를 붙였다.
+이미 추적된 파일은 gitignore만 추가해도 추적에서 빠지지 않는다.
+[Git gitignore 문서](https://git-scm.com/docs/gitignore)의 규약이다(2026-09-12 확인).
+이 작업에서 쓴 Git은 2.50.1이다.
+처음에는 최신 트리만 검사했다.
+그러면 누출 파일을 다음 커밋에서 지운 뒤 push할 때 놓친다.
+원격 이력에는 이전 blob이 남아서 검사 범위를 커밋 전체로 바꿨다.
+
+<details markdown="1">
+<summary>훅을 검토하려면 펼치기: 첫 push와 브랜치 삭제를 포함한 전체 코드</summary>
+
+아래는 이 repo에 커밋된 `.githooks/pre-push`다.
+2026-09-12에 HEAD와 로컬 사본이 같은지 확인했다.
+앞의 `core.hooksPath` 설정이 있어야 이 파일을 실행한다.
 
 ```bash
-# .githooks/pre-push — 팁 트리가 아니라 push되는 커밋 범위 전체를 검사한다
-range="$remote_sha..$local_sha"
-"$ROOT/scripts/check-publish.sh" --range $range || status=1
+#!/usr/bin/env bash
+# pre-push: push 되는 각 ref 의 "커밋 범위 전체 blob" 을 scripts/check-publish.sh 로 검사한다.
+#           팁 트리만 보면 뒤 커밋에서 지운 파일이 원격 이력으로 새어 나간다.
+# 설치: git config core.hooksPath .githooks   (README)
+set -u
+ROOT=$(git rev-parse --show-toplevel)
+zero=$(printf '0%.0s' $(seq 1 40))   # 전부 0 인 OID = ref 없음. SHA-1 기준 40자.
+status=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue   # ref 삭제
+  if [ "$remote_sha" = "$zero" ]; then
+    range="$local_sha --not --remotes"     # 새 브랜치/첫 push: 원격에 없는 모든 커밋
+  else
+    range="$remote_sha..$local_sha"
+  fi
+  echo "check-publish: $local_ref ($(git rev-parse --short "$local_sha")) range: $range" >&2
+  # $range 는 일부러 따옴표 없이 — 여러 낱말일 수 있다.
+  "$ROOT/scripts/check-publish.sh" --range $range || status=1
+done
+exit $status
 ```
 
-{: #again}
-## 다시 한다면
+`$range`의 비인용은 의도적이다. 새 브랜치에서는 여러 인자로 나눠 넘긴다.
+훅은 검사기의 호출부다. 다른 repo에 이 파일만 복사하면 검사가 완성되지 않는다.
+이 repo의 `scripts/check-publish.sh`와 로컬 `.denylist`도 필요하다.
 
-로컬 빌드를 맨 먼저 세운다. 날짜가 미래인 글이 목록에서 조용히 빠지는 걸 실제 빌드에서야 알았다. Jekyll은 `future` 기본값이 false라 미래 날짜 글을 뺀다.
+검사기는 이메일·전화번호·SSH git 주소·GitLab URL·내부 도메인·사설 IP를 찾는다.
+여기에 `.denylist` 패턴을 더한다.
+호출부는 커밋된 코드 기준이고, 미커밋 검사기 변경의 동작까지 검증했다는 뜻은 아니다.
 
-`_config.yml`에 `future: true` 한 줄이면 끝나는 문제다. 다만 렌더해 보기 전에는 "올렸는데 목록에 없다"로만 보인다. GitHub이 빌드해 주니 로컬 툴체인 없이도 첫 글은 나가지만 없으면 이런 걸 계속 늦게 발견한다.
+</details>
 
-| 당신의 상황 | 권한다 / 말린다 |
-|---|---|
-| 산출물이 md·html이고 글 단위로 골라 올린다 | 권한다. 옮기는 단계가 없다 |
-| 볼트 전체를 자동 미러링하고 싶다 | 말린다. 변환기가 필요해지고, 그러면 전용 도구가 낫다 |
-| 초안과 커밋 이력까지 비공개여야 한다 | 말린다. Free 플랜은 public repo가 전제다 |
-| 댓글·통계·구독 관리가 필요하다 | 말린다. 전부 외부 서비스를 붙여야 한다 |
+{: #limits}
+## 골라 옮길 양을 넘으면 다시 판단한다
 
-지금 확인해 볼 것 하나. 볼트에서 첫 줄이 `---`인 md가 몇 개인지 세어 보라. 그 수가 옮길 준비가 이미 끝난 글의 수다.
+웹 에디터에 다시 붙이는 방법이 가장 적은 준비로 시작할 수 있다.
+나는 로컬 원문을 계속 쓰려는 목적 때문에 파일 이동을 택했다.
 
-```bash
-find . -name '*.md' -exec sh -c 'head -1 "$1" | grep -q "^---$" && echo "$1"' _ {} \; | wc -l
-```
+| 어떤 상황인가 | 어떤 판단을 남기나 | 근거 종류 |
+|---|---|---|
+| md·html을 글 단위로 골라 올림 | 이 작업 범위에서 권함 | 11편 일괄 게시 기록, [미확인: DOCS-6 · 작성자가 권고에 쓴 근거 종류] |
+| 볼트 전체 자동 미러링 | 수동 이동을 그대로 확대하는 것은 보류 | 변환 필요성은 추론, [미확인: DOCS-6 · 비교·기각 근거 종류] |
+| 초안과 커밋 이력까지 비공개여야 함 | 이 Free·public 구성은 맞지 않음 | 플랜 문서 확인, [미확인: DOCS-6 · 당시 권고 근거 종류] |
+| 댓글·통계·구독 관리가 필요함 | 필요한 기능의 운영 경로부터 확인 | [미확인: DOCS-6 · 외부 서비스가 필요하다는 판단의 근거 종류] |
+
+확인한 경험은 사이트 구축과 11편 일괄 게시까지다.
+파일마다 손보는 양이 늘면 이 방법의 비용도 달라진다.
+그때는 옮길 파일 수와 파일당 손질을 기준으로 다시 비교해야 한다.

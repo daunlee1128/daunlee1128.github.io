@@ -4,7 +4,7 @@
 set -euo pipefail
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 if ! command -v bundle >/dev/null 2>&1; then echo "SKIP: bundle not found (Task 0 참고)"; exit 3; fi
-TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+TMP=$(cd "$(mktemp -d)" && pwd -P); trap 'rm -rf "$TMP"' EXIT
 rsync -a --exclude .git --exclude _site --exclude .jekyll-cache --exclude drafts "$ROOT/" "$TMP/"
 if [ "${1:-}" = "--with-samples" ] && [ -d "$ROOT/drafts/samples" ]; then
   rsync -a "$ROOT/drafts/samples/" "$TMP/"

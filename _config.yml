@@ -22,12 +22,18 @@ collections:
   insights:
     output: true
     permalink: /insights/:name/
+  trending:
+    output: true
+    permalink: /github-trending/:name/
 
 defaults:
   - scope: { path: "", type: tech }
     values: { layout: post, type: tech, section: tech }
   - scope: { path: "", type: insights }
     values: { layout: post, type: insights, section: insights }
+  # trending 회차는 self-contained 리포트를 iframe 으로 싣는다 — post 레이아웃을 타지 않는다
+  - scope: { path: "", type: trending }
+    values: { layout: trending, section: trending }
   # stack/ 은 어느 탭에도 속하지 않는다 — 헤더의 '글' 탭이 활성되지 않도록 section 을 준다
   - scope: { path: "stack" }
     values: { section: stack }

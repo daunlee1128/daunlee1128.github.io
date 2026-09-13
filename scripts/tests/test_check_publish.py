@@ -107,6 +107,22 @@ class CheckPublish(TempRepo):
         r = self.check("--tree", "HEAD")
         self.assertEqual(r.returncode, 0, r.stderr)
 
+    def test_exempt_report_dir_is_skipped(self):
+        """assets/trending/ 은 기계 생성 리포트 전용 — 인라인 base64 오탐 때문에 검사를 건너뛴다."""
+        self.commit_file("assets/trending/2026-09-07.html", "<html>Acme Corp 가 base64 안에 있다 010-1234" + "-5678</html>")
+        self.commit_file("assets/trending/sub/nested.html", "proj-phoenix")
+        r = self.check("--tree", "HEAD")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        r = self.check("assets/trending/2026-09-07.html")
+        self.assertEqual(r.returncode, 0, r.stderr)
+
+    def test_exemption_does_not_leak_to_similar_paths(self):
+        """접두 비교는 슬래시까지 — assets/trending-notes.md 나 다른 assets/ 파일은 그대로 검사한다."""
+        self.commit_file("assets/trending-notes.md", "Acme Corp 내부 메모")
+        r = self.check("--tree", "HEAD")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("assets/trending-notes.md:1:", r.stderr)
+
     def test_working_tree_default_scans_tracked_files(self):
         r = self.check()
         self.assertEqual(r.returncode, 0, r.stderr)

@@ -15,6 +15,11 @@ ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 DENYLIST="${DENYLIST:-$ROOT/.denylist}"
 ALLOWLIST="${ALLOWLIST:-$ROOT/.allowlist}"
 BINARY_EXT='png|jpg|jpeg|gif|webp|svg|ico|pdf|woff|woff2|ttf|otf|zip'
+# 검사 제외 경로 — 기계 생성 self-contained 리포트(github-trending 회차)만.
+# 인라인 base64 JPEG 와 압축 JS 의 바이트열이 내장 패턴·denylist 를 대량 오탐시키는데,
+# .allowlist 는 denylist 에 걸리는 항목을 거부하므로(설계상 올바름) 리터럴 면제가 불가능하다.
+# 사람이 쓴 산문은 절대 이 아래에 두지 않는다 — 검사를 그대로 우회한다.
+EXEMPT_PREFIX='assets/trending/'
 MASK='⟨allow⟩'
 # 내장 패턴 — 공개 무해. <org>/<repo> 형태 GitHub URL 은 OSS 링크와 구분이 안 되므로 .denylist 로.
 # 이 배열은 건드리지 않는다. 오탐(예: 4자리 버전 문자열)은 .allowlist 로 그 리터럴만 면제한다.
@@ -128,6 +133,9 @@ content_of() {  # $1 = files 인덱스
 scanned=0
 for i in "${!files[@]}"; do
   f="${files[$i]}"
+  # 경로 정규화 — 인자로 절대경로나 ./ 접두가 올 수 있다. 제외는 repo 상대 경로로만 판정한다.
+  norm="${f#"$ROOT/"}"; norm="${norm#./}"
+  case "$norm" in "$EXEMPT_PREFIX"*) continue ;; esac
   ext="${f##*.}"; ext="${ext,,}"
   if [[ "$f" == *.* ]] && [[ "$ext" =~ ^($BINARY_EXT)$ ]]; then continue; fi
   scanned=$((scanned+1))

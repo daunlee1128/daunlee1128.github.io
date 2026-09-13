@@ -1,0 +1,34 @@
+/* 리포트(self-contained, shadcn 토큰)를 블로그 안 iframe 에서 볼 때만 주입된다.
+   리포트 원본은 건드리지 않는다 — 단독으로 열면 원래 shadcn 테마 그대로다.
+   값을 직접 쓰지 않고 tokens.css 의 변수를 참조하므로, iframe 에 tokens.css 를 함께 주입하고
+   <html> 에 dark 클래스만 동기화하면 라이트·다크가 따라온다.
+   리포트 CSS 의 @media (prefers-color-scheme:dark) 보다 뒤에 주입되어 같은 :root 특정성에서 이긴다 —
+   OS 가 다크이고 블로그가 라이트인 경우에도 블로그 쪽이 이긴다. */
+:root{
+  --background:var(--color-background);
+  --foreground:var(--gray-12);
+  --card:var(--color-panel);
+  --card-foreground:var(--gray-12);
+  --primary:var(--gray-12);
+  --primary-foreground:var(--gray-1);
+  --secondary:var(--gray-3);
+  --secondary-foreground:var(--gray-12);
+  --muted:var(--gray-3);
+  --muted-foreground:var(--gray-11);
+  --accent:var(--gray-3);
+  --accent-foreground:var(--gray-12);
+  --border:var(--gray-6);
+  --input:var(--gray-6);
+  --ring:var(--accent-8);
+  /* --sans·--mono 는 여기서 건드리지 않는다 — tokens.css 가 리포트보다 뒤에 주입되므로
+     블로그 폰트 스택이 이미 리포트의 Geist 를 덮는다(자기 참조를 쓰면 오히려 무효가 된다). */
+  /* color-mix 원본이 oklch 기준이라 hex 토큰에서는 안 맞는다 — srgb 로 다시 만든다 */
+  --muted-50:color-mix(in srgb, var(--gray-3) 50%, transparent);
+  --ring-10:color-mix(in srgb, var(--gray-12) 10%, transparent);
+}
+/* --chart-1~5(토픽 맵 없어진 뒤로는 1-hop 그래프의 노드·차원 색)와 언어 색(--js/--ts/--py/--cpp)은
+   데이터 구분용이라 블로그 팔레트로 덮지 않는다. 다만 강조 역할인 --issue 만 블로그 accent 로 맞춘다. */
+:root{ --issue:var(--accent-9); }
+
+/* 리포트는 제 여백을 갖고 있다 — 블로그 본문 폭에 맞춰 위쪽만 줄인다 */
+main{ padding-top:var(--sp-5); }

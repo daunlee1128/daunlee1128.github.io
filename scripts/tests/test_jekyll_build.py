@@ -26,7 +26,8 @@ class JekyllBuild(unittest.TestCase):
     def test_urls_from_spec_2_2_exist(self):
         for rel in ["index.html", "tech/index.html", "insights/index.html", "tech/sample-sigv4-403/index.html",
                     "insights/sample-langfuse-two-months/index.html", "stack/kong/index.html", "about/index.html",
-                    "explain/sample-sigv4.html", "feed.xml", "sitemap.xml", "assets/tokens.css", "assets/site.css"]:
+                    "explain/sample-sigv4.html", "feed.xml", "sitemap.xml", "assets/tokens.css", "assets/site.css",
+                    "github-trending/index.html", "github-trending/2026-09-07/index.html", "assets/trending/2026-09-07.html"]:
             with self.subTest(url=rel):
                 self.assertTrue((SITE / rel).is_file())
 

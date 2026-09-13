@@ -1,0 +1,23 @@
+---
+layout: page
+title: GitHub Trending
+lead: GitHub Trending 주간 AI repo 를 웹 · GitHub · YouTube 로 교차 조사한 회차별 리포트.
+section: trending
+permalink: /github-trending/
+---
+{%- assign issues = site.trending | sort: "date" | reverse -%}
+<h1 class="t">{{ page.title }}<small>{{ issues | size }}</small></h1>
+<p class="lead">{{ page.lead }}</p>
+<div class="rows">
+  {%- assign year = "" -%}
+  {%- for it in issues -%}
+    {%- assign y = it.date | date: "%Y" -%}
+    {%- if y != year -%}<div class="ysep">{{ y }}</div>{%- assign year = y -%}{%- endif -%}
+  <a class="row" href="{{ it.url | relative_url }}">
+    <span class="top"><time datetime="{{ it.date | date: '%Y-%m-%d' }}">{{ it.date | date: '%Y-%m-%d' }}</time></span>
+    <b>{{ it.title }}</b>
+    <p>{{ it.summary }}</p>
+  </a>
+  {%- endfor -%}
+</div>
+{%- if issues.size == 0 -%}<p class="empty">아직 리포트가 없습니다.</p>{%- endif -%}

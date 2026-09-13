@@ -28,9 +28,11 @@ class ConfigAndData(unittest.TestCase):
         cfg = load_yaml("_config.yml")
         self.assertEqual(cfg["collections"]["tech"], {"output": True, "permalink": "/tech/:name/"})
         self.assertEqual(cfg["collections"]["insights"], {"output": True, "permalink": "/insights/:name/"})
+        self.assertEqual(cfg["collections"]["trending"], {"output": True, "permalink": "/github-trending/:name/"})
         scopes = {(d["scope"].get("type"), d["values"].get("type"), d["values"].get("layout")) for d in cfg["defaults"]}
         self.assertIn(("tech", "tech", "post"), scopes)
         self.assertIn(("insights", "insights", "post"), scopes)
+        self.assertIn(("trending", None, "trending"), scopes, "trending 회차는 post 가 아니라 trending 레이아웃")
         self.assertIn({"path": "stack"}, [d["scope"] for d in cfg["defaults"]], "stack/ 페이지는 section: stack — 어떤 탭도 활성 아님")
         stack_default = [d for d in cfg["defaults"] if d["scope"] == {"path": "stack"}][0]
         self.assertEqual(stack_default["values"]["section"], "stack")
@@ -99,8 +101,9 @@ class Assets(unittest.TestCase):
                     ".mermaid", ".fig-scroll", ".figcap", ".d-box", ".d-l", ".d-t", ".d-lbl", ".d-band",
                     ".ysep", ".more-btn", ".zoom", ".zoomdlg", "table.stack"]:
             self.assertIn(sel, css, sel)
-        # 가로 스크롤은 코드 블록(.art pre)과 모바일 종류 세그먼트(.seg)뿐 — 표·그림·스택 맵은 폭에 맞춘다
-        self.assertEqual(css.count("overflow-x:auto"), 2, ".art pre · .seg 만 overflow-x:auto")
+        # 가로 스크롤은 코드 블록(.art pre)·모바일 종류 세그먼트(.seg)·모바일 탭바(.mtabs)뿐 — 표·그림·스택 맵은 폭에 맞춘다
+        # .mtabs 는 탭이 5개(글·기술·인사이트·GitHub Trending·About)가 되며 360px 폭에서 넘친다
+        self.assertEqual(css.count("overflow-x:auto"), 3, ".art pre · .seg · .mtabs 만 overflow-x:auto")
         self.assertIn("@media(max-width:768px)", css.replace(" ", ""))
         self.assertIn("@media print", css)
         self.assertNotIn("url(", css)
@@ -188,11 +191,12 @@ class IncludesAndDefaultLayout(unittest.TestCase):
     def test_header_has_tabs_github_rss_toggle_and_no_real_name(self):
         h = self.read("_includes/header.html")
         for s in ["site.handle", "site.tagline", "site.github_url", "/feed.xml", "data-theme-toggle", "icon-sun", "icon-moon",
-                  'page.section == "tech"', 'page.section == "insights"', 'page.section == "about"']:
+                  'page.section == "tech"', 'page.section == "insights"', 'page.section == "trending"', 'page.section == "about"']:
             self.assertIn(s, h, s)
         self.assertIn('class="mhd mobile-only"', h)
         self.assertIn('class="mtabs mobile-only"', h)
         self.assertEqual(h.count("relative_url }}\">글</a>"), 2, "「글」 탭은 데스크톱·모바일 양쪽에")
+        self.assertEqual(h.count("GitHub Trending</a>"), 2, "GitHub Trending 탭도 데스크톱·모바일 양쪽에")
 
     def test_post_row_contract(self):
         r = self.read("_includes/post-row.html")

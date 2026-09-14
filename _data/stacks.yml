@@ -31,3 +31,4 @@
     - { slug: docker,    name: Docker }
     - { slug: github-pages, name: GitHub Pages }
     - { slug: load-balancing, name: Load Balancing }
+    - { slug: wireshark, name: Wireshark }

@@ -1,172 +1,113 @@
 ---
 type: tech
 kind: troubleshooting
-title: "Kong 뒤 Bedrock 스트리밍에서 긴 응답만 중간에 끊긴다"
+title: Kong OSS 3.9.3의 invoke-stream은 200이어도 스트리밍하지 않았다
 date: 2026-09-07
 stack: [kong, bedrock]
-summary: "carry-over 패치는 원복했다. 실제 조치는 동기 Converse 우회였다."
+summary: "문서 요약만 보고 설정을 preserve로 바꿨다가 500을 냈다. 재검증에서 invoke·invoke-stream 두 라우트가 계약을 지키지 않고 있다는 것도 드러났다."
 ---
 
-응답 크기 대신 절단점 위치를 변수로 놓고 파서의 응답 분기끼리 대조했다.
-Bedrock `ConverseStream`의 긴 출력은 Kong 뒤에서 도중에 닫혔다.
-carry-over 패치는 원복했다.
-실제 조치는 동기 `Converse` 우회였다.
+설정 필드 하나가 어느 버전부터 있는지 문서 요약만 보고 넘겨짚어, native Bedrock 라우트가 연속으로 500을 냈다.
+그래서 설정과 나머지 라우트를 전부 스키마와 실제 클라이언트로 다시 확인했다.
+그 결과 라우트 두 개가 실제로는 계약을 지키지 않고 있었다는 게 드러났다.
 
-독자는 Kong으로 Bedrock 스트리밍 응답을 파싱해 내보내는 사람이다.
-답은 [“스트리밍 경로를 동기 Converse 호출로 우회했다” 절](#sync-converse-bypass)에 있다.
+독자는 Kong `ai-proxy`로 Bedrock native passthrough를 구성하고 여러 operation(라우트)을 운영하는 사람이다.
+답은 [PDK로 바꾸고 라우트를 둘로 좁힌 절](#fix)에 있다.
 
-바로 할 것:
+{: #situation data-k="SITUATION"}
+## 문서 요약만 보고 설정을 preserve로 바꿨다
 
-1. 마지막 SSE event와 Gateway 오류를 같은 요청에서 모은다.
-2. Kong version과 AWS eventstream parser 구현을 확인한다.
-3. 청크 하나를 완결된 프레임으로 가정하는지 source에서 본다.
-4. 해당 version의 수정 release가 있는지 공식 changelog를 확인한다.
-5. upgrade가 막히면 동기 `Converse` 경로로 우회한다.
+OSS 전환 과정에서 native Bedrock passthrough 라우트 4종의 설정을 바꿨다. 근거는 "`llm_format`은 Kong
+3.10.0.0 도입 → OSS 3.9.3엔 없다"는 전제였다. `route_type`을 `"llm/v1/chat"` + `llm_format:"bedrock"`에서
+`"preserve"`로 바꾸고 `llm_format`은 지웠다. 라우트 4종은 invoke·converse·converse-stream·invoke-stream이다.
 
-{: #streaming-symptom }
-## 스트리밍 route를 만든 뒤 긴 응답이 닫혔다
-
-2026-07-13에 legacy 스트리밍 route를 만들었다.
-07-23에 현재 경로로 나눴고, 08-04와 08-12에 route를 하나씩 더했다.
-
-[미확인: STREAM-2 · 최초 발견자와 발견 경로]
-
-짧은 응답은 끝까지 왔다는 기록이 남아 있다.
-긴 출력에서는 Lua `body_filter`가 실패하고 chunked 응답이 무너졌다.
-
-[미확인: STREAM-1 · 마지막 SSE event나 로그 원문, 재현 부하 규모, 끊긴 비율]
+실 재검증(2026-07-22)에서 native 호출이 연속으로 500을 냈다.
 
 <details markdown="1">
-<summary>parser 오류를 대조할 사람이 펼치기: 기록에 남은 두 nil 지점</summary>
-
-- `count` 산술 연산에서 nil 오류
-- nil 값을 함수처럼 호출한 오류
-
-</details>
-
-{: #parser-assumption }
-## Kong 3.9.3 파서는 완결된 AWS 프레임을 가정했다
-
-이 경로는 Kong OSS 3.9.3의 내장 Lua/LuaJIT parser를 썼다.
-Bedrock API는 `ConverseStream`이고 응답은 SSE로 다시 조립했다.
-
-parser 생성자 주석은 입력을 완결된 AWS response stream chunk라고 적었다.
-16바이트보다 짧은 입력만 거절했고 프레임 중간 절단은 지키지 못했다.
-
-<details markdown="1">
-<summary>프레임 레이아웃을 대조할 사람이 펼치기: 길이 필드와 CRC 위치</summary>
-
-2026-09-12에 [Smithy Amazon Event Stream 규격][s]을 확인했다.
-message는 prelude와 data로 나뉜다.
-prelude에는 전체 길이 4바이트와 header 길이 4바이트가 있다.
-각 부분 뒤에는 CRC32 4바이트가 붙어 고정 overhead는 16바이트다.
-수신자는 이 필드 구조와 payload 길이 식으로 message 경계를 복원한다.
+<summary>로그 원문을 볼 사람이 펼치기: 실제로 찍힌 두 에러</summary>
 
 ```text
-[ total length: 4B ][ headers length: 4B ][ prelude CRC: 4B ]
-[ headers ... ][ payload ... ][ message CRC: 4B ]
+"require 'cjson.safe' not allowed within sandbox"
+[ai-proxy] bedrock.lua:629: attempt to index a nil value
 ```
 
-HTTP 청크가 어디서 끝나는지는 이 message 길이와 별개다.
-청크 끝이 프레임 중간이면 다음 호출까지 꼬리를 보관해야 한다.
-
 </details>
 
-같은 함수의 표준 SSE와 Gemini 분기는 잘린 꼬리를 보관했다.
-나중에 붙은 AWS eventstream 분기만 그 처리가 없었다.
+{: #root-cause data-k="ROOT CAUSE"}
+## 가설 → 확인
 
-<details markdown="1">
-<summary>분기와 공식 문서를 대조할 사람이 펼치기: 꼬리 처리와 정렬 설정</summary>
+드라이버는 upstream URL을 만들 때 route 종류별 템플릿을 담은 `operation_map`이라는 테이블을 찾아 쓴다.
 
-| 응답 분기 | 잘린 꼬리를 |
-|---|---|
-| 표준 SSE | 다음 청크에 이어 붙임 |
-| Gemini | 다음 청크에 이어 붙임 |
-| AWS eventstream | 버림 |
-
-이 파서에서는 방어 로직이 분기마다 따로 관리됐다.
-코드 구조는 프레임 절단이 nil 오류로 이어지는 경로를 설명한다.
-
-2026-09-12에 [handler][h]·[Response PDK][p] 등 Kong 공식 문서 11개를 비교했다.
-route entity·large payload·3.9.0 route source와 handler·PDK를 포함했다.
-AI Proxy 개요·reference·Bedrock provider·parser source·두 changelog도 확인했다.
-frame 정렬 설정은 찾지 못했다.
-두 대표 문서는 `body_filter`가 도착한 chunk마다 실행되는 계약을 보여준다.
-
-</details>
-
-[미확인: STREAM-4 · 부하 유무에 따라 프레임 절단 위치가 달라진 로그]
-
-{: #discarded-carry-over }
-## carry-over 패치는 다음 날 전량 원복됐다
-
-2026-08-13에 AWS 분기의 미소비 bytes를 잇는 임시 patch를 적용했다.
-다음 날 관련 patch를 모두 제거하고 원본 image로 돌아갔다.
-
-따라서 carry-over buffer를 운영의 최종 수리로 쓰면 사실과 어긋난다.
-
-{: #upgrade-boundary }
-## 수정 release는 있었지만 현재 OSS version에는 없었다
-
-[Kong AI Proxy changelog][k]에는 두 수정 release가 있다.
-
-<details markdown="1">
-<summary>upgrade를 검토할 사람이 펼치기: 수정 version과 release date</summary>
-
-| version | release date | 공식 기록 |
+| 가설 | 확인 방법 | 판정 |
 |---|---|---|
-| 3.11.0.2 | 2025-07-28 | incomplete AWS frame parser 수정 |
-| 3.10.0.4 | 2025-08-07 | 같은 수정 backport |
+| pre-function의 JSON 파싱이 막혔다 | Kong 3.9.3 serverless-functions sandbox 동작 확인 | 확인 — sandbox가 `require('cjson.safe')` 자체를 차단한다 |
+| `route_type:"preserve"`가 URL 구성에서 죽는다 | `ai-proxy` bedrock 드라이버 소스 확인 | 확인 — `preserve` 아래서 드라이버가 `operation_map["bedrock"]["preserve"]`(존재하지 않음)로 URL을 만들려다 nil index로 죽는다 |
+| `llm_format`이 3.10+ 전용이다 | 실제 3.9.3 ai-proxy 스키마 직접 확인 | 기각 — 스키마에 `llm_format`이 있고, `llm/v1/chat` + `llm_format:"bedrock"`을 스키마가 강제한다("native provider options in llm_format can only be used with the 'llm/v1/chat' route_type") |
 
-</details>
+"3.10+에서 도입됐다"는 문서 요약이 오독이었다. `preserve`는 `llm_format`과 함께 쓸 수 없다. 단독으로 쓰면 드라이버가 bedrock URL을 못 만들어 500이었다.
 
-사건 당시 이 환경은 OSS 3.9.3이었다.
-내가 당시 파악한 제약은 OSS 3.9.3 이후에 Enterprise license가 필요하다는 것이었다.
-이는 공식 license 정책을 확인한 사실이 아니라 작성자 진술이다.
-별도 EE 3.14.0.3 환경은 수정 이후 계열에 해당한다.
-[미확인: STREAM-6 후속 · EE 3.14.0.3 환경으로 실제 이전하지 않은 이유]
-
-{: #sync-converse-bypass }
-## 스트리밍 경로를 동기 Converse 호출로 우회했다
-
-이 글의 조건: Kong OSS 3.9.3, 내장 Lua/LuaJIT parser, Bedrock `ConverseStream`, client 응답 SSE, 재현 부하 미확인.
-이 결론은 한 parser 함수에 응답 분기 셋을 둔 구현에서 확인했다.
-
-임시 carry-over 패치를 유지하지 않고 모델 호출을 동기 `Converse`로 돌렸다.
-이 결정을 모델 호출의 과도기 표준으로 문서화했다.
-streaming response parser를 지나지 않으므로 확인한 crash 경로를 피한다.
-
-[미확인: STREAM-3 · 우회 구현·운영 반영, 같은 부하의 절단 여부]
-[미확인: STREAM-5 · 재현에 사용한 부하 규모]
-
-- 같은 조건에서는 임시 parser patch보다 동기 우회 여부를 먼저 판단한다.
-- streaming이 제품 요구라면 수정 parser를 포함한 version으로 옮긴다.
-
-{: #remaining-cost }
-## 동기 우회는 스트리밍 전달을 포기하는 선택이다
-
-동기 `Converse`는 frame 재조립 crash를 피하지만 token을 도착 즉시 보내지 못한다.
-첫 응답까지 기다리는 시간이 길어질 수 있다.
+여기서 멈추지 않고 소스를 더 읽었다. 이 드라이버가 실제로 다루는 upstream operation은 Converse 계열 2종뿐이다.
+클라이언트가 어떤 경로로 불렀는지는 upstream에 전달되지 않는다.
 
 <details markdown="1">
-<summary>같은 판단을 다시 할 사람이 펼치기: 확인된 선택과 남은 구멍</summary>
+<summary>소스를 대조할 사람이 펼치기: driver·adapter가 라우트를 판별하는 방식</summary>
 
-| 선택 | 확인한 것 | 남은 구멍 |
-|---|---|---|
-| 정렬 설정 변경 | 설정 전량과 공식 문서 11개 | 해당 항목을 찾지 못함 |
-| 수정 version으로 upgrade | 공식 changelog의 parser 수정 | EE 이전 사유 |
-| 임시 carry-over patch | 적용 다음 날 전량 원복 | 운영 처방에서 제외 |
-| 동기 `Converse` 우회 | crash parser를 지나지 않는 설계 | 구현과 운영 관측 |
+`kong/llm/drivers/bedrock.lua`는 upstream operation을 항상 `stream_mode and "converse-stream" or
+"converse"`로 자체 재구성한다 — 파일에 `"invoke"` 문자열 자체가 없다. `kong/llm/adapters/bedrock.lua`는
+path의 operation 문자열이 정확히 `converse-stream`일 때만 stream 모드로 판단한다. 이 adapter는 Converse
+스키마 기준으로 요청과 응답을 정규화하는 왕복 변환기다.
 
 </details>
 
-남은 판단은 동기 응답의 대기 비용을 받아들일 수 있는지다.
-그 비용을 받을 수 없으면 EE 이전 조건과 운영 검증부터 채워야 한다.
+{: #fix data-k="FIX"}
+## PDK로 바꾸고 라우트를 둘로 좁혔다
 
-[s]: https://smithy.io/2.0/aws/amazon-eventstream.html
+이 글의 조건: Kong OSS 3.9.3, `ai-proxy` 플러그인, native Bedrock passthrough(`llm_format:bedrock`).
 
-[k]: https://developer.konghq.com/plugins/ai-proxy/changelog/
+두 조치를 함께 적용해 500을 없앴다. pre-function의 JSON 파싱을 `require('cjson.safe')` 대신 Kong PDK
+(`kong.request.get_body`/`kong.service.request.set_body`)로 바꿔 sandbox 차단을 피했다. `route_type`은
+`"llm/v1/chat"`으로, `llm_format`은 `"bedrock"`으로 되돌려 드라이버가 URL을 만들 수 있게 했다.
 
-[h]: https://developer.konghq.com/custom-plugins/handler.lua/
+```yaml
+# before (500)
+route_type: "preserve"
 
-[p]: https://developer.konghq.com/gateway/pdk/reference/kong.response/
+# after
+route_type: "llm/v1/chat"
+llm_format: "bedrock"
+```
+
+재검증에서 500이 사라졌다. "4라우트가 설정이 거의 같은데 병합 가능한가"라는 질문이 나왔다. boto3
+클라이언트로 4라우트를 전부 때려 실제 동작을 확인했다(2026-07-22). 그중 하나는 응답을 eventstream 프레임으로
+잘못 해석해 체크섬 불일치 오류(`ChecksumMismatch`)로 클라이언트가 실패했다.
+
+| 라우트 | HTTP | 실제 동작 |
+|---|---|---|
+| invoke | 200 | silent 계약 위반 — Anthropic native 요청을 보냈는데 Converse 형태 응답이 와 클라이언트가 `stop_reason 없음`으로 실패 |
+| converse | 200 | 정상 |
+| converse-stream | 200 | 정상 스트리밍(eventstream 파싱 정상) |
+| invoke-stream | 200 | 클라이언트가 응답을 eventstream으로 파싱하려다 크래시 — `ChecksumMismatch: expected 0x73223a7b`(ASCII로 `s":{`), 일반 JSON 응답을 eventstream 프레임으로 오독 |
+
+앞서 "4라우트 모두 200"이라고 확인했던 것은 HTTP 상태 코드만 본 것이었다. 응답 스키마가 맞는지, 스트리밍이
+실제로 되는지는 이번 클라이언트 검증에서 처음 확인됐다.
+
+native Bedrock 라우트는 `converse`·`converse-stream` 2종만 남기고 `invoke`·`invoke-stream`은 seed에서
+제거했다. 제공 못 하는 의미론을 제공하는 척하는 것보다 404가 정직한 계약이라고 봤다. invoke를 Converse 바디를
+받는 alias로 유지하는 안도 검토했다. 실제 Bedrock InvokeModel과 양방향 호환이 깨진다. invoke-stream은 그렇게
+해도 스트리밍이 안 된다. 두 이유로 기각했다. `route-bedrock-runtime-converse-stream`에는 `response_buffering: false`를
+켜 뒀다 — Converse event-stream 청크를 Kong이 버퍼링하지 않고 도착 즉시 클라이언트로 흘려보내기 위해서다.
+
+같은 구성이라면 seed에 `route-bedrock-runtime-invoke`나 `-invoke-stream`이 아직 남아 있는지부터 확인하는 게
+먼저다. 남아 있다면 200을 받는다고 안심하지 말고 boto3 native 클라이언트로 실제 응답 스키마와 스트리밍 여부를
+직접 때려 봐야 한다.
+
+{: #prevention data-k="PREVENTION"}
+## 200은 계약을 지킨다는 뜻이 아니다
+
+converse 계열 2종만 남긴 뒤로는 native Bedrock InvokeModel 스키마 그대로를 이 게이트웨이로 받을 방법이 없다.
+boto3 `converse`/`converse_stream`, Strands `BedrockModel`, LangChain `ChatBedrockConverse`처럼 Converse
+계열 클라이언트만 대상이다. 순수 InvokeModel 클라이언트는 이 게이트웨이를 못 쓴다.
+
+설정 필드 하나가 어느 버전에 있는지는 문서 요약이 아니라 스키마로 직접 확인해야 했다. 라우트가 동작하는지도
+같은 방식으로, 실제 클라이언트로 응답 스키마와 스트리밍 동작까지 확인해야 알 수 있었다. 2026-07-22에 발견한
+두 계약 위반은 "4라우트 모두 200"이라는 HTTP 상태 코드만으로는 판별할 수 없었다.

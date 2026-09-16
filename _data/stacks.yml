@@ -12,6 +12,7 @@
     - { slug: agentcore,   name: AgentCore Runtime }
     - { slug: langgraph,   name: LangGraph }
     - { slug: claude-code, name: Claude Code }
+    - { slug: codex,       name: Codex }
     - { slug: mitmproxy,   name: mitmproxy }
 - group: Observability · Eval
   items:

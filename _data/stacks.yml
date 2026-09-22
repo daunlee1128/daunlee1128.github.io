@@ -14,6 +14,7 @@
     - { slug: claude-code, name: Claude Code }
     - { slug: codex,       name: Codex }
     - { slug: mitmproxy,   name: mitmproxy }
+    - { slug: typesafe-jev, name: TypeSafe Jev }
 - group: Observability · Eval
   items:
     - { slug: langfuse,  name: Langfuse }

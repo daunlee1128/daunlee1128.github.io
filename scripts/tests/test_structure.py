@@ -200,7 +200,7 @@ class IncludesAndDefaultLayout(unittest.TestCase):
 
     def test_post_row_contract(self):
         r = self.read("_includes/post-row.html")
-        for s in ['data-kind="', "include.show_type", "kind-badge.html", "p.summary", "p.stack", "p.explain", "인터랙티브 설명"]:
+        for s in ['data-kind="', "include.show_type", "kind-badge.html", "p.summary", "p.stack", "p.explain", "인터랙티브 설명", "p.link", 'target="_blank"']:
             self.assertIn(s, r, s)
 
     def test_sidebar_renders_only_stacks_with_posts_and_mobile_chips(self):
